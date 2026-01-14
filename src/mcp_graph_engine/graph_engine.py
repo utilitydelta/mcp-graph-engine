@@ -481,3 +481,267 @@ class GraphEngine:
             'node_types': node_types,
             'relation_types': relation_types
         }
+
+    # Query & Analysis Methods
+
+    def shortest_path(self, source: str, target: str) -> Dict[str, Any]:
+        """
+        Find the shortest path between two nodes.
+
+        Args:
+            source: Source node label (will be fuzzy matched)
+            target: Target node label (will be fuzzy matched)
+
+        Returns:
+            Dict with 'path' (list of node labels) and 'length', or 'path': None with 'reason' if no path exists
+        """
+        # Match source node
+        source_match = self.matcher.find_match(source, list(self.graph.nodes()))
+        if not source_match.matched_label:
+            return {"path": None, "reason": f"Source node not found: {source}"}
+
+        # Match target node
+        target_match = self.matcher.find_match(target, list(self.graph.nodes()))
+        if not target_match.matched_label:
+            return {"path": None, "reason": f"Target node not found: {target}"}
+
+        source_matched = source_match.matched_label
+        target_matched = target_match.matched_label
+
+        try:
+            path = nx.shortest_path(self.graph, source_matched, target_matched)
+            return {"path": path, "length": len(path) - 1}
+        except nx.NetworkXNoPath:
+            return {"path": None, "reason": f"No path exists between {source_matched} and {target_matched}"}
+        except nx.NodeNotFound as e:
+            return {"path": None, "reason": f"Node not found in graph: {str(e)}"}
+
+    def all_paths(self, source: str, target: str, max_length: Optional[int] = None) -> Dict[str, Any]:
+        """
+        Find all simple paths between two nodes.
+
+        Args:
+            source: Source node label (will be fuzzy matched)
+            target: Target node label (will be fuzzy matched)
+            max_length: Maximum path length (cutoff)
+
+        Returns:
+            Dict with 'paths' (list of paths) and 'count'
+        """
+        # Match source node
+        source_match = self.matcher.find_match(source, list(self.graph.nodes()))
+        if not source_match.matched_label:
+            return {"paths": [], "count": 0, "reason": f"Source node not found: {source}"}
+
+        # Match target node
+        target_match = self.matcher.find_match(target, list(self.graph.nodes()))
+        if not target_match.matched_label:
+            return {"paths": [], "count": 0, "reason": f"Target node not found: {target}"}
+
+        source_matched = source_match.matched_label
+        target_matched = target_match.matched_label
+
+        try:
+            paths = list(nx.all_simple_paths(self.graph, source_matched, target_matched, cutoff=max_length))
+            return {"paths": paths, "count": len(paths)}
+        except nx.NodeNotFound as e:
+            return {"paths": [], "count": 0, "reason": f"Node not found in graph: {str(e)}"}
+
+    def pagerank(self, top_n: Optional[int] = None) -> Dict[str, Any]:
+        """
+        Calculate PageRank scores for all nodes.
+
+        Args:
+            top_n: Optional limit to return only top N nodes
+
+        Returns:
+            Dict with 'rankings' (list of {label, score})
+        """
+        if self.graph.number_of_nodes() == 0:
+            return {"rankings": []}
+
+        try:
+            scores = nx.pagerank(self.graph)
+            # Sort by score descending
+            sorted_scores = sorted(scores.items(), key=lambda x: x[1], reverse=True)
+
+            # Apply top_n limit if specified
+            if top_n is not None:
+                sorted_scores = sorted_scores[:top_n]
+
+            rankings = [{"label": label, "score": score} for label, score in sorted_scores]
+            return {"rankings": rankings}
+        except Exception as e:
+            return {"rankings": [], "error": f"PageRank calculation failed: {str(e)}"}
+
+    def connected_components(self) -> Dict[str, Any]:
+        """
+        Find weakly connected components in the directed graph.
+
+        Returns:
+            Dict with 'components' (list of lists of node labels) and 'count'
+        """
+        if self.graph.number_of_nodes() == 0:
+            return {"components": [], "count": 0}
+
+        # Use weakly_connected_components for directed graphs
+        components = list(nx.weakly_connected_components(self.graph))
+        # Convert sets to sorted lists for consistent output
+        components_lists = [sorted(list(comp)) for comp in components]
+        # Sort by size descending, then alphabetically by first node
+        components_lists.sort(key=lambda x: (-len(x), x[0] if x else ""))
+
+        return {"components": components_lists, "count": len(components_lists)}
+
+    def find_cycles(self) -> Dict[str, Any]:
+        """
+        Detect cycles in the graph.
+
+        Returns:
+            Dict with 'cycles' (list of cycles) and 'has_cycles' boolean
+        """
+        if self.graph.number_of_nodes() == 0:
+            return {"cycles": [], "has_cycles": False}
+
+        try:
+            # simple_cycles returns an iterator of cycles
+            cycles = list(nx.simple_cycles(self.graph))
+            return {"cycles": cycles, "has_cycles": len(cycles) > 0}
+        except Exception as e:
+            return {"cycles": [], "has_cycles": False, "error": f"Cycle detection failed: {str(e)}"}
+
+    def transitive_reduction(self, in_place: bool = False) -> Dict[str, Any]:
+        """
+        Remove redundant edges from the graph (transitive reduction).
+
+        Args:
+            in_place: If True, modify the current graph; if False, return count without modifying
+
+        Returns:
+            Dict with 'edges_removed' count
+        """
+        if self.graph.number_of_edges() == 0:
+            return {"edges_removed": 0}
+
+        try:
+            # Get the transitive reduction
+            reduced = nx.transitive_reduction(self.graph)
+
+            # Count edges that would be removed
+            original_edges = set(self.graph.edges())
+            reduced_edges = set(reduced.edges())
+            edges_to_remove = original_edges - reduced_edges
+            edges_removed_count = len(edges_to_remove)
+
+            # If in_place, modify the current graph
+            if in_place:
+                # Remove the redundant edges but preserve edge attributes for remaining edges
+                for src, tgt in edges_to_remove:
+                    self.graph.remove_edge(src, tgt)
+
+            return {"edges_removed": edges_removed_count}
+        except Exception as e:
+            return {"edges_removed": 0, "error": f"Transitive reduction failed: {str(e)}"}
+
+    def degree_centrality(self, top_n: Optional[int] = None) -> Dict[str, Any]:
+        """
+        Calculate degree centrality for all nodes.
+
+        Args:
+            top_n: Optional limit to return only top N nodes
+
+        Returns:
+            Dict with 'rankings' (list of {label, in_degree, out_degree, total})
+        """
+        if self.graph.number_of_nodes() == 0:
+            return {"rankings": []}
+
+        try:
+            in_centrality = nx.in_degree_centrality(self.graph)
+            out_centrality = nx.out_degree_centrality(self.graph)
+
+            # Combine into rankings with total score
+            rankings = []
+            for node in self.graph.nodes():
+                in_deg = in_centrality[node]
+                out_deg = out_centrality[node]
+                total = in_deg + out_deg
+                rankings.append({
+                    "label": node,
+                    "in_degree": in_deg,
+                    "out_degree": out_deg,
+                    "total": total
+                })
+
+            # Sort by total centrality descending
+            rankings.sort(key=lambda x: x["total"], reverse=True)
+
+            # Apply top_n limit if specified
+            if top_n is not None:
+                rankings = rankings[:top_n]
+
+            return {"rankings": rankings}
+        except Exception as e:
+            return {"rankings": [], "error": f"Degree centrality calculation failed: {str(e)}"}
+
+    def subgraph(self, nodes: List[str], include_edges: bool = True) -> Dict[str, Any]:
+        """
+        Extract a subgraph containing specific nodes.
+
+        Args:
+            nodes: List of node labels (will be fuzzy matched)
+            include_edges: If True, include edges between the nodes; if False, only nodes
+
+        Returns:
+            Dict with 'nodes' and 'edges' lists
+        """
+        # Match all provided nodes
+        matched_nodes = []
+        not_found = []
+
+        for node_label in nodes:
+            node_match = self.matcher.find_match(node_label, list(self.graph.nodes()))
+            if node_match.matched_label:
+                matched_nodes.append(node_match.matched_label)
+            else:
+                not_found.append(node_label)
+
+        if not matched_nodes:
+            return {"nodes": [], "edges": [], "not_found": not_found}
+
+        # Get subgraph
+        try:
+            sub = self.graph.subgraph(matched_nodes)
+
+            # Build nodes list with attributes
+            nodes_list = []
+            for label in sub.nodes():
+                attrs = self.graph.nodes[label]
+                node_type = attrs.get('type')
+                properties = {k: v for k, v in attrs.items() if k != 'type'}
+                nodes_list.append({
+                    'label': label,
+                    'type': node_type,
+                    'properties': properties
+                })
+
+            # Build edges list if requested
+            edges_list = []
+            if include_edges:
+                for src, tgt, attrs in sub.edges(data=True):
+                    relation = attrs.get('relation')
+                    properties = {k: v for k, v in attrs.items() if k != 'relation'}
+                    edges_list.append({
+                        'source': src,
+                        'target': tgt,
+                        'relation': relation,
+                        'properties': properties
+                    })
+
+            result = {"nodes": nodes_list, "edges": edges_list}
+            if not_found:
+                result["not_found"] = not_found
+
+            return result
+        except Exception as e:
+            return {"nodes": [], "edges": [], "error": f"Subgraph extraction failed: {str(e)}", "not_found": not_found}

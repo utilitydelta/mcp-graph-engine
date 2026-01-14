@@ -308,6 +308,169 @@ TOOL_GET_NEIGHBORS = Tool(
     }
 )
 
+# Query & Analysis Tools
+
+TOOL_SHORTEST_PATH = Tool(
+    name="shortest_path",
+    description="Find the shortest path between two nodes using Dijkstra's algorithm",
+    inputSchema={
+        "type": "object",
+        "properties": {
+            "graph": {
+                "type": "string",
+                "description": "Name of the graph (defaults to 'default')"
+            },
+            "source": {
+                "type": "string",
+                "description": "Source node label (will be fuzzy matched)"
+            },
+            "target": {
+                "type": "string",
+                "description": "Target node label (will be fuzzy matched)"
+            }
+        },
+        "required": ["source", "target"]
+    }
+)
+
+TOOL_ALL_PATHS = Tool(
+    name="all_paths",
+    description="Find all simple paths between two nodes (no repeated nodes)",
+    inputSchema={
+        "type": "object",
+        "properties": {
+            "graph": {
+                "type": "string",
+                "description": "Name of the graph (defaults to 'default')"
+            },
+            "source": {
+                "type": "string",
+                "description": "Source node label (will be fuzzy matched)"
+            },
+            "target": {
+                "type": "string",
+                "description": "Target node label (will be fuzzy matched)"
+            },
+            "max_length": {
+                "type": "number",
+                "description": "Maximum path length to consider (optional)"
+            }
+        },
+        "required": ["source", "target"]
+    }
+)
+
+TOOL_PAGERANK = Tool(
+    name="pagerank",
+    description="Calculate PageRank scores to identify important/central nodes in the graph",
+    inputSchema={
+        "type": "object",
+        "properties": {
+            "graph": {
+                "type": "string",
+                "description": "Name of the graph (defaults to 'default')"
+            },
+            "top_n": {
+                "type": "number",
+                "description": "Return only the top N nodes by score (optional, returns all if omitted)"
+            }
+        },
+        "required": []
+    }
+)
+
+TOOL_CONNECTED_COMPONENTS = Tool(
+    name="connected_components",
+    description="Find weakly connected components (groups of nodes connected by paths, ignoring edge direction)",
+    inputSchema={
+        "type": "object",
+        "properties": {
+            "graph": {
+                "type": "string",
+                "description": "Name of the graph (defaults to 'default')"
+            }
+        },
+        "required": []
+    }
+)
+
+TOOL_FIND_CYCLES = Tool(
+    name="find_cycles",
+    description="Detect cycles in the graph (circular dependency paths)",
+    inputSchema={
+        "type": "object",
+        "properties": {
+            "graph": {
+                "type": "string",
+                "description": "Name of the graph (defaults to 'default')"
+            }
+        },
+        "required": []
+    }
+)
+
+TOOL_TRANSITIVE_REDUCTION = Tool(
+    name="transitive_reduction",
+    description="Remove redundant transitive edges (e.g., if A->B->C and A->C exist, remove A->C)",
+    inputSchema={
+        "type": "object",
+        "properties": {
+            "graph": {
+                "type": "string",
+                "description": "Name of the graph (defaults to 'default')"
+            },
+            "in_place": {
+                "type": "boolean",
+                "description": "If true, modify the graph; if false, only return count (defaults to false)"
+            }
+        },
+        "required": []
+    }
+)
+
+TOOL_DEGREE_CENTRALITY = Tool(
+    name="degree_centrality",
+    description="Calculate degree centrality (in-degree, out-degree) to identify highly connected nodes",
+    inputSchema={
+        "type": "object",
+        "properties": {
+            "graph": {
+                "type": "string",
+                "description": "Name of the graph (defaults to 'default')"
+            },
+            "top_n": {
+                "type": "number",
+                "description": "Return only the top N nodes by total centrality (optional, returns all if omitted)"
+            }
+        },
+        "required": []
+    }
+)
+
+TOOL_SUBGRAPH = Tool(
+    name="subgraph",
+    description="Extract a subgraph containing only the specified nodes and their interconnections",
+    inputSchema={
+        "type": "object",
+        "properties": {
+            "graph": {
+                "type": "string",
+                "description": "Name of the graph (defaults to 'default')"
+            },
+            "nodes": {
+                "type": "array",
+                "description": "List of node labels to include (will be fuzzy matched)",
+                "items": {"type": "string"}
+            },
+            "include_edges": {
+                "type": "boolean",
+                "description": "If true, include edges between nodes; if false, only nodes (defaults to true)"
+            }
+        },
+        "required": ["nodes"]
+    }
+)
+
 # All tools list
 ALL_TOOLS = [
     TOOL_LIST_GRAPHS,
@@ -323,4 +486,12 @@ ALL_TOOLS = [
     TOOL_FIND_EDGES,
     TOOL_REMOVE_EDGE,
     TOOL_GET_NEIGHBORS,
+    TOOL_SHORTEST_PATH,
+    TOOL_ALL_PATHS,
+    TOOL_PAGERANK,
+    TOOL_CONNECTED_COMPONENTS,
+    TOOL_FIND_CYCLES,
+    TOOL_TRANSITIVE_REDUCTION,
+    TOOL_DEGREE_CENTRALITY,
+    TOOL_SUBGRAPH,
 ]

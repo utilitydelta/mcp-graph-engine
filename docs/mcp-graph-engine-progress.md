@@ -52,3 +52,36 @@ N/A
 
 ---
 
+## Phase 2 Summary
+**Completed**: Session 1 (commit 8aaae65)
+
+### What was done
+- Three-tier matching pipeline: exact -> normalized -> embedding
+- Integrated sentence-transformers with all-MiniLM-L6-v2 model
+- Lazy-loaded model to avoid startup overhead
+- Cosine similarity with 0.75 threshold
+- Ambiguity detection (0.05 threshold, max 5 candidates)
+- Embeddings computed automatically when nodes are added
+- Embeddings stored per-graph session for isolation
+- 12 new embedding test files
+
+### Key decisions
+- Similarity threshold 0.75 is conservative - prevents false positives
+- Normalized matching handles most LLM query variations ("auth service" -> "AuthService")
+- Embedding matching kicks in for semantic similarity ("database pool" -> "DatabaseConnectionPool")
+- Model loaded lazily on first embedding request
+- MatchResult extended to include similarity score and candidates list
+
+### Files modified
+- matcher.py - Added embedding-based matching with MATCHING_CONFIG
+- graph_engine.py - Added _compute_embedding(), find_node() with candidates
+- session.py - Embeddings dict shared between GraphEngine and Matcher
+- server.py - find_node uses GraphEngine's fuzzy matching
+
+### Integration status
+- Build: ✓
+- Tests: ✓ (18 passing)
+- Import: ✓ (all modules importable)
+
+---
+

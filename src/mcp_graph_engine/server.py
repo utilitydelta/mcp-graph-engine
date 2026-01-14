@@ -137,6 +137,49 @@ class GraphServer:
             )
             return {"neighbors": neighbors}
 
+        # Query & Analysis tools
+        elif name == "shortest_path":
+            graph = self.session_manager.get_graph(graph_name)
+            return graph.shortest_path(
+                source=args["source"],
+                target=args["target"]
+            )
+
+        elif name == "all_paths":
+            graph = self.session_manager.get_graph(graph_name)
+            return graph.all_paths(
+                source=args["source"],
+                target=args["target"],
+                max_length=args.get("max_length")
+            )
+
+        elif name == "pagerank":
+            graph = self.session_manager.get_graph(graph_name)
+            return graph.pagerank(top_n=args.get("top_n"))
+
+        elif name == "connected_components":
+            graph = self.session_manager.get_graph(graph_name)
+            return graph.connected_components()
+
+        elif name == "find_cycles":
+            graph = self.session_manager.get_graph(graph_name)
+            return graph.find_cycles()
+
+        elif name == "transitive_reduction":
+            graph = self.session_manager.get_graph(graph_name)
+            return graph.transitive_reduction(in_place=args.get("in_place", False))
+
+        elif name == "degree_centrality":
+            graph = self.session_manager.get_graph(graph_name)
+            return graph.degree_centrality(top_n=args.get("top_n"))
+
+        elif name == "subgraph":
+            graph = self.session_manager.get_graph(graph_name)
+            return graph.subgraph(
+                nodes=args["nodes"],
+                include_edges=args.get("include_edges", True)
+            )
+
         else:
             raise ValueError(f"Unknown tool: {name}")
 

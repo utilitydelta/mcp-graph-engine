@@ -165,13 +165,15 @@ def test_tools_definition():
     expected_tools = [
         "list_graphs", "delete_graph", "get_graph_info",
         "add_node", "add_nodes", "list_nodes", "find_node", "remove_node",
-        "add_edge", "add_edges", "find_edges", "remove_edge", "get_neighbors"
+        "add_edge", "add_edges", "find_edges", "remove_edge", "get_neighbors",
+        "shortest_path", "all_paths", "pagerank", "connected_components",
+        "find_cycles", "transitive_reduction", "degree_centrality", "subgraph"
     ]
 
     for expected in expected_tools:
         assert expected in tool_names, f"Missing tool: {expected}"
 
-    print(f"✓ All expected tools present: {', '.join(expected_tools)}")
+    print(f"✓ All expected tools present: {', '.join(sorted(expected_tools))}")
 
 
 def test_server_initialization():
