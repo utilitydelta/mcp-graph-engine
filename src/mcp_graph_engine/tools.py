@@ -471,6 +471,52 @@ TOOL_SUBGRAPH = Tool(
     }
 )
 
+# Import/Export Tools
+
+TOOL_IMPORT_GRAPH = Tool(
+    name="import_graph",
+    description="Import a graph from various formats (DOT, CSV, GraphML, JSON), merging into existing graph",
+    inputSchema={
+        "type": "object",
+        "properties": {
+            "graph": {
+                "type": "string",
+                "description": "Name of the graph (defaults to 'default')"
+            },
+            "format": {
+                "type": "string",
+                "enum": ["dot", "csv", "graphml", "json"],
+                "description": "Format of the input data"
+            },
+            "content": {
+                "type": "string",
+                "description": "String content to import"
+            }
+        },
+        "required": ["format", "content"]
+    }
+)
+
+TOOL_EXPORT_GRAPH = Tool(
+    name="export_graph",
+    description="Export the graph to various formats (DOT, CSV, GraphML, JSON)",
+    inputSchema={
+        "type": "object",
+        "properties": {
+            "graph": {
+                "type": "string",
+                "description": "Name of the graph (defaults to 'default')"
+            },
+            "format": {
+                "type": "string",
+                "enum": ["dot", "csv", "graphml", "json"],
+                "description": "Format to export to"
+            }
+        },
+        "required": ["format"]
+    }
+)
+
 # All tools list
 ALL_TOOLS = [
     TOOL_LIST_GRAPHS,
@@ -494,4 +540,6 @@ ALL_TOOLS = [
     TOOL_TRANSITIVE_REDUCTION,
     TOOL_DEGREE_CENTRALITY,
     TOOL_SUBGRAPH,
+    TOOL_IMPORT_GRAPH,
+    TOOL_EXPORT_GRAPH,
 ]

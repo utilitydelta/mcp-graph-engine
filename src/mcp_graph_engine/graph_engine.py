@@ -3,6 +3,9 @@
 from typing import List, Dict, Any, Optional, Tuple
 import networkx as nx
 import numpy as np
+import csv
+import json
+from io import StringIO
 from .matcher import Matcher, MatchResult
 
 
@@ -745,3 +748,263 @@ class GraphEngine:
             return result
         except Exception as e:
             return {"nodes": [], "edges": [], "error": f"Subgraph extraction failed: {str(e)}", "not_found": not_found}
+
+    # Import/Export Methods
+
+    def import_graph(self, format: str, content: str) -> Dict[str, Any]:
+        """
+        Import a graph from various formats, merging into the existing graph.
+
+        Args:
+            format: Format of the input ("dot", "csv", "graphml", "json")
+            content: String content to parse
+
+        Returns:
+            Dict with 'nodes_added' and 'edges_added' counts
+        """
+        initial_node_count = self.graph.number_of_nodes()
+        initial_edge_count = self.graph.number_of_edges()
+
+        try:
+            if format == "dot":
+                self._import_dot(content)
+            elif format == "csv":
+                self._import_csv(content)
+            elif format == "graphml":
+                self._import_graphml(content)
+            elif format == "json":
+                self._import_json(content)
+            else:
+                raise ValueError(f"Unsupported import format: {format}")
+
+            nodes_added = self.graph.number_of_nodes() - initial_node_count
+            edges_added = self.graph.number_of_edges() - initial_edge_count
+
+            return {"nodes_added": nodes_added, "edges_added": edges_added}
+        except Exception as e:
+            raise ValueError(f"Import failed: {str(e)}")
+
+    def _import_dot(self, content: str):
+        """Import from DOT format using pydot."""
+        import pydot
+
+        # Parse DOT content
+        graphs = pydot.graph_from_dot_data(content)
+        if not graphs:
+            raise ValueError("Failed to parse DOT content")
+
+        pydot_graph = graphs[0]
+
+        # Import nodes
+        for node in pydot_graph.get_nodes():
+            node_name = node.get_name().strip('"')
+            # Skip special nodes
+            if node_name in ('graph', 'node', 'edge'):
+                continue
+
+            # Extract node attributes
+            node_type = node.get('type')
+            if node_type:
+                node_type = node_type.strip('"')
+
+            # Add node
+            self.add_node(node_name, node_type=node_type)
+
+        # Import edges
+        for edge in pydot_graph.get_edges():
+            source = edge.get_source().strip('"')
+            target = edge.get_destination().strip('"')
+
+            # Get relation from 'label' attribute or default to 'edge'
+            relation = edge.get('label')
+            if relation:
+                relation = relation.strip('"')
+            else:
+                relation = 'edge'
+
+            # Add edge (nodes should already exist from above)
+            try:
+                self.add_edge(source, target, relation)
+            except ValueError:
+                # Node might not exist if it was implicit in DOT
+                self.add_node(source)
+                self.add_node(target)
+                self.add_edge(source, target, relation)
+
+    def _import_csv(self, content: str):
+        """Import from CSV edge list format."""
+        reader = csv.DictReader(StringIO(content))
+
+        # Validate headers
+        if 'source' not in reader.fieldnames or 'target' not in reader.fieldnames:
+            raise ValueError("CSV must have 'source' and 'target' columns")
+
+        for row in reader:
+            source = row['source'].strip()
+            target = row['target'].strip()
+            relation = row.get('relation', 'edge').strip()
+
+            # Add nodes if they don't exist
+            if source not in self.graph:
+                self.add_node(source)
+            if target not in self.graph:
+                self.add_node(target)
+
+            # Add edge
+            self.add_edge(source, target, relation)
+
+    def _import_graphml(self, content: str):
+        """Import from GraphML format using NetworkX."""
+        # Parse GraphML
+        imported_graph = nx.read_graphml(StringIO(content))
+
+        # Convert to directed if needed
+        if not imported_graph.is_directed():
+            imported_graph = imported_graph.to_directed()
+
+        # Import nodes
+        for node, attrs in imported_graph.nodes(data=True):
+            node_type = attrs.get('type')
+            properties = {k: v for k, v in attrs.items() if k != 'type'}
+            self.add_node(node, node_type=node_type, properties=properties if properties else None)
+
+        # Import edges
+        for source, target, attrs in imported_graph.edges(data=True):
+            relation = attrs.get('relation', 'edge')
+            properties = {k: v for k, v in attrs.items() if k != 'relation'}
+            self.add_edge(source, target, relation, properties=properties if properties else None)
+
+    def _import_json(self, content: str):
+        """Import from JSON format."""
+        data = json.loads(content)
+
+        # Import nodes
+        if 'nodes' in data:
+            for node_data in data['nodes']:
+                label = node_data.get('label')
+                if not label:
+                    continue
+                node_type = node_data.get('type')
+                properties = node_data.get('properties')
+                self.add_node(label, node_type=node_type, properties=properties)
+
+        # Import edges
+        if 'edges' in data:
+            for edge_data in data['edges']:
+                source = edge_data.get('source')
+                target = edge_data.get('target')
+                if not source or not target:
+                    continue
+
+                # Add nodes if they don't exist
+                if source not in self.graph:
+                    self.add_node(source)
+                if target not in self.graph:
+                    self.add_node(target)
+
+                relation = edge_data.get('relation', 'edge')
+                properties = edge_data.get('properties')
+                self.add_edge(source, target, relation, properties=properties)
+
+    def export_graph(self, format: str) -> str:
+        """
+        Export the graph to various formats.
+
+        Args:
+            format: Format to export to ("dot", "csv", "graphml", "json")
+
+        Returns:
+            String containing the exported graph
+        """
+        try:
+            if format == "dot":
+                return self._export_dot()
+            elif format == "csv":
+                return self._export_csv()
+            elif format == "graphml":
+                return self._export_graphml()
+            elif format == "json":
+                return self._export_json()
+            else:
+                raise ValueError(f"Unsupported export format: {format}")
+        except Exception as e:
+            raise ValueError(f"Export failed: {str(e)}")
+
+    def _export_dot(self) -> str:
+        """Export to DOT format using pydot."""
+        import pydot
+
+        # Create pydot graph
+        pydot_graph = pydot.Dot(graph_type='digraph')
+
+        # Add nodes
+        for node, attrs in self.graph.nodes(data=True):
+            node_type = attrs.get('type')
+            pydot_node = pydot.Node(node)
+            if node_type:
+                pydot_node.set('type', node_type)
+            pydot_graph.add_node(pydot_node)
+
+        # Add edges
+        for source, target, attrs in self.graph.edges(data=True):
+            relation = attrs.get('relation', 'edge')
+            pydot_edge = pydot.Edge(source, target, label=relation)
+            pydot_graph.add_edge(pydot_edge)
+
+        return pydot_graph.to_string()
+
+    def _export_csv(self) -> str:
+        """Export to CSV edge list format."""
+        output = StringIO()
+        writer = csv.DictWriter(output, fieldnames=['source', 'target', 'relation'])
+        writer.writeheader()
+
+        for source, target, attrs in self.graph.edges(data=True):
+            relation = attrs.get('relation', 'edge')
+            writer.writerow({
+                'source': source,
+                'target': target,
+                'relation': relation
+            })
+
+        return output.getvalue()
+
+    def _export_graphml(self) -> str:
+        """Export to GraphML format using NetworkX."""
+        from io import BytesIO
+        output = BytesIO()
+        nx.write_graphml(self.graph, output)
+        return output.getvalue().decode('utf-8')
+
+    def _export_json(self) -> str:
+        """Export to JSON format."""
+        data = {
+            'nodes': [],
+            'edges': []
+        }
+
+        # Export nodes
+        for node, attrs in self.graph.nodes(data=True):
+            node_type = attrs.get('type')
+            properties = {k: v for k, v in attrs.items() if k != 'type'}
+            node_data = {'label': node}
+            if node_type:
+                node_data['type'] = node_type
+            if properties:
+                node_data['properties'] = properties
+            data['nodes'].append(node_data)
+
+        # Export edges
+        for source, target, attrs in self.graph.edges(data=True):
+            relation = attrs.get('relation', 'edge')
+            properties = {k: v for k, v in attrs.items() if k != 'relation'}
+            edge_data = {
+                'source': source,
+                'target': target,
+                'relation': relation
+            }
+            if properties:
+                edge_data['properties'] = properties
+            data['edges'].append(edge_data)
+
+        return json.dumps(data, indent=2)

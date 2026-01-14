@@ -180,6 +180,20 @@ class GraphServer:
                 include_edges=args.get("include_edges", True)
             )
 
+        # Import/Export tools
+        elif name == "import_graph":
+            graph = self.session_manager.get_graph(graph_name)
+            result = graph.import_graph(
+                format=args["format"],
+                content=args["content"]
+            )
+            return result
+
+        elif name == "export_graph":
+            graph = self.session_manager.get_graph(graph_name)
+            content = graph.export_graph(format=args["format"])
+            return {"content": content}
+
         else:
             raise ValueError(f"Unknown tool: {name}")
 
