@@ -1,0 +1,2 @@
+[console_scripts]
+mcp-graph-engine = mcp_graph_engine.server:main

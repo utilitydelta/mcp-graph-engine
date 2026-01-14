@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mcp-graph-engine"
+version = "0.1.0"
+description = "MCP Graph Engine - A graph-based memory and reasoning tool for LLMs"
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "mcp>=0.9.0",
+    "networkx>=3.0",
+    "sentence-transformers>=2.2.0",
+    "numpy>=1.24.0",
+    "pydot>=1.4.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-asyncio>=0.21.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[project.scripts]
+mcp-graph-engine = "mcp_graph_engine.server:main"
