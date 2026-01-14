@@ -359,14 +359,14 @@ A,B"""
         """Test that malformed JSON raises error."""
         engine = GraphEngine()
 
-        with pytest.raises(ValueError, match="Import failed"):
+        with pytest.raises(ValueError, match="Failed to parse JSON"):
             engine.import_graph("json", "not valid json{")
 
     def test_malformed_dot(self):
         """Test that malformed DOT raises error."""
         engine = GraphEngine()
 
-        with pytest.raises(ValueError, match="Import failed"):
+        with pytest.raises(ValueError, match="Failed to parse DOT"):
             engine.import_graph("dot", "not valid dot syntax {{{")
 
 

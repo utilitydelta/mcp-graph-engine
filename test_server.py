@@ -167,8 +167,11 @@ def test_tools_definition():
         "add_node", "add_nodes", "list_nodes", "find_node", "remove_node",
         "add_edge", "add_edges", "find_edges", "remove_edge", "get_neighbors",
         "shortest_path", "all_paths", "pagerank", "connected_components",
-        "find_cycles", "transitive_reduction", "degree_centrality", "subgraph"
+        "find_cycles", "transitive_reduction", "degree_centrality", "subgraph",
+        "import_graph", "export_graph"
     ]
+
+    assert len(ALL_TOOLS) == 23, f"Expected 23 tools, got {len(ALL_TOOLS)}"
 
     for expected in expected_tools:
         assert expected in tool_names, f"Missing tool: {expected}"

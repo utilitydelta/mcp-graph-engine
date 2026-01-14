@@ -112,3 +112,28 @@ N/A
 
 ---
 
+## Phase 4 Summary
+**Completed**: Session 1 (commit f8cb5e3)
+
+### What was done
+- Implemented import_graph and export_graph tools
+- DOT format via pydot library
+- CSV edge list format
+- JSON format with nodes/edges arrays
+- GraphML format via NetworkX
+- Import merges into existing graph (additive)
+- Roundtrip tested for all formats
+
+### Key decisions
+- Import auto-creates nodes mentioned in edges
+- CSV allows optional relation column (defaults to 'edge')
+- JSON preserves node/edge properties
+- GraphML uses NetworkX for robust parsing
+
+### Integration status
+- Build: ✓
+- Tests: ✓ (32 import/export tests passing)
+- Total tools: 23
+
+---
+

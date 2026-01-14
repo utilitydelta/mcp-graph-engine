@@ -89,7 +89,12 @@ class SessionManager:
             ValueError: If graph doesn't exist
         """
         if name not in self.graphs:
-            raise ValueError(f"Graph '{name}' does not exist")
+            available = [g['name'] for g in self.list_graphs()]
+            if available:
+                available_str = ", ".join(available)
+                raise ValueError(f"Graph '{name}' does not exist. Available graphs: {available_str}. Use list_graphs to see all.")
+            else:
+                raise ValueError(f"Graph '{name}' does not exist. No graphs have been created yet. Operations on a graph auto-create it.")
 
         session = self.graphs[name]
         graph_engine = session['graph']

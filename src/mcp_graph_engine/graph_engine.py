@@ -229,14 +229,24 @@ class GraphEngine:
             ValueError: If source or target nodes don't exist (no match found)
         """
         # Match source node
-        source_match = self.matcher.find_match(source, list(self.graph.nodes()))
+        existing_nodes = list(self.graph.nodes())
+        if not existing_nodes:
+            raise ValueError(f"Cannot add edge: graph is empty. Add nodes first with add_node or add_nodes.")
+
+        source_match = self.matcher.find_match(source, existing_nodes)
         if not source_match.matched_label:
-            raise ValueError(f"Source node not found: {source}")
+            available = ", ".join(existing_nodes[:5])
+            if len(existing_nodes) > 5:
+                available += f", ... ({len(existing_nodes)} total nodes)"
+            raise ValueError(f"Source node '{source}' not found. Available nodes: {available}. Use find_node to search.")
 
         # Match target node
-        target_match = self.matcher.find_match(target, list(self.graph.nodes()))
+        target_match = self.matcher.find_match(target, existing_nodes)
         if not target_match.matched_label:
-            raise ValueError(f"Target node not found: {target}")
+            available = ", ".join(existing_nodes[:5])
+            if len(existing_nodes) > 5:
+                available += f", ... ({len(existing_nodes)} total nodes)"
+            raise ValueError(f"Target node '{target}' not found. Available nodes: {available}. Use find_node to search.")
 
         source_matched = source_match.matched_label
         target_matched = target_match.matched_label
@@ -498,26 +508,40 @@ class GraphEngine:
         Returns:
             Dict with 'path' (list of node labels) and 'length', or 'path': None with 'reason' if no path exists
         """
+        existing_nodes = list(self.graph.nodes())
+        if not existing_nodes:
+            return {"path": None, "reason": "Cannot find path: graph is empty. Add nodes first."}
+
         # Match source node
-        source_match = self.matcher.find_match(source, list(self.graph.nodes()))
+        source_match = self.matcher.find_match(source, existing_nodes)
         if not source_match.matched_label:
-            return {"path": None, "reason": f"Source node not found: {source}"}
+            available = ", ".join(existing_nodes[:5])
+            if len(existing_nodes) > 5:
+                available += f", ... ({len(existing_nodes)} total)"
+            return {"path": None, "reason": f"Source node '{source}' not found. Available: {available}. Use find_node to search."}
 
         # Match target node
-        target_match = self.matcher.find_match(target, list(self.graph.nodes()))
+        target_match = self.matcher.find_match(target, existing_nodes)
         if not target_match.matched_label:
-            return {"path": None, "reason": f"Target node not found: {target}"}
+            available = ", ".join(existing_nodes[:5])
+            if len(existing_nodes) > 5:
+                available += f", ... ({len(existing_nodes)} total)"
+            return {"path": None, "reason": f"Target node '{target}' not found. Available: {available}. Use find_node to search."}
 
         source_matched = source_match.matched_label
         target_matched = target_match.matched_label
+
+        # Handle self-loops
+        if source_matched == target_matched:
+            return {"path": [source_matched], "length": 0}
 
         try:
             path = nx.shortest_path(self.graph, source_matched, target_matched)
             return {"path": path, "length": len(path) - 1}
         except nx.NetworkXNoPath:
-            return {"path": None, "reason": f"No path exists between {source_matched} and {target_matched}"}
+            return {"path": None, "reason": f"No path exists from '{source_matched}' to '{target_matched}'. Nodes are in disconnected components. Use connected_components to analyze."}
         except nx.NodeNotFound as e:
-            return {"path": None, "reason": f"Node not found in graph: {str(e)}"}
+            return {"path": None, "reason": f"Internal error: Node not found in graph: {str(e)}"}
 
     def all_paths(self, source: str, target: str, max_length: Optional[int] = None) -> Dict[str, Any]:
         """
@@ -531,24 +555,40 @@ class GraphEngine:
         Returns:
             Dict with 'paths' (list of paths) and 'count'
         """
+        existing_nodes = list(self.graph.nodes())
+        if not existing_nodes:
+            return {"paths": [], "count": 0, "reason": "Cannot find paths: graph is empty. Add nodes first."}
+
         # Match source node
-        source_match = self.matcher.find_match(source, list(self.graph.nodes()))
+        source_match = self.matcher.find_match(source, existing_nodes)
         if not source_match.matched_label:
-            return {"paths": [], "count": 0, "reason": f"Source node not found: {source}"}
+            available = ", ".join(existing_nodes[:5])
+            if len(existing_nodes) > 5:
+                available += f", ... ({len(existing_nodes)} total)"
+            return {"paths": [], "count": 0, "reason": f"Source node '{source}' not found. Available: {available}. Use find_node to search."}
 
         # Match target node
-        target_match = self.matcher.find_match(target, list(self.graph.nodes()))
+        target_match = self.matcher.find_match(target, existing_nodes)
         if not target_match.matched_label:
-            return {"paths": [], "count": 0, "reason": f"Target node not found: {target}"}
+            available = ", ".join(existing_nodes[:5])
+            if len(existing_nodes) > 5:
+                available += f", ... ({len(existing_nodes)} total)"
+            return {"paths": [], "count": 0, "reason": f"Target node '{target}' not found. Available: {available}. Use find_node to search."}
 
         source_matched = source_match.matched_label
         target_matched = target_match.matched_label
 
+        # Handle self-loops
+        if source_matched == target_matched:
+            return {"paths": [[source_matched]], "count": 1}
+
         try:
             paths = list(nx.all_simple_paths(self.graph, source_matched, target_matched, cutoff=max_length))
+            if len(paths) == 0:
+                return {"paths": [], "count": 0, "reason": f"No paths found from '{source_matched}' to '{target_matched}'. Nodes may be in disconnected components."}
             return {"paths": paths, "count": len(paths)}
         except nx.NodeNotFound as e:
-            return {"paths": [], "count": 0, "reason": f"Node not found in graph: {str(e)}"}
+            return {"paths": [], "count": 0, "reason": f"Internal error: Node not found in graph: {str(e)}"}
 
     def pagerank(self, top_n: Optional[int] = None) -> Dict[str, Any]:
         """
@@ -762,6 +802,9 @@ class GraphEngine:
         Returns:
             Dict with 'nodes_added' and 'edges_added' counts
         """
+        if not content or not content.strip():
+            raise ValueError(f"Cannot import: content is empty. Provide valid {format} data.")
+
         initial_node_count = self.graph.number_of_nodes()
         initial_edge_count = self.graph.number_of_edges()
 
@@ -775,14 +818,18 @@ class GraphEngine:
             elif format == "json":
                 self._import_json(content)
             else:
-                raise ValueError(f"Unsupported import format: {format}")
+                raise ValueError(f"Unsupported import format '{format}'. Supported formats: dot, csv, graphml, json.")
 
             nodes_added = self.graph.number_of_nodes() - initial_node_count
             edges_added = self.graph.number_of_edges() - initial_edge_count
 
             return {"nodes_added": nodes_added, "edges_added": edges_added}
+        except ValueError:
+            # Re-raise ValueError with original message
+            raise
         except Exception as e:
-            raise ValueError(f"Import failed: {str(e)}")
+            # Wrap other exceptions with helpful context
+            raise ValueError(f"Import failed ({format} format): {str(e)}. Check that content is valid {format} data.")
 
     def _import_dot(self, content: str):
         """Import from DOT format using pydot."""
@@ -836,8 +883,9 @@ class GraphEngine:
         reader = csv.DictReader(StringIO(content))
 
         # Validate headers
-        if 'source' not in reader.fieldnames or 'target' not in reader.fieldnames:
-            raise ValueError("CSV must have 'source' and 'target' columns")
+        if not reader.fieldnames or 'source' not in reader.fieldnames or 'target' not in reader.fieldnames:
+            available = ", ".join(reader.fieldnames) if reader.fieldnames else "none"
+            raise ValueError(f"CSV must have 'source' and 'target' columns. Found columns: {available}")
 
         for row in reader:
             source = row['source'].strip()
@@ -876,7 +924,10 @@ class GraphEngine:
 
     def _import_json(self, content: str):
         """Import from JSON format."""
-        data = json.loads(content)
+        try:
+            data = json.loads(content)
+        except json.JSONDecodeError as e:
+            raise ValueError(f"Failed to parse JSON: {str(e)}")
 
         # Import nodes
         if 'nodes' in data:
@@ -916,6 +967,18 @@ class GraphEngine:
         Returns:
             String containing the exported graph
         """
+        if self.graph.number_of_nodes() == 0:
+            # Allow exporting empty graphs
+            if format == "json":
+                return '{"nodes": [], "edges": []}'
+            elif format == "csv":
+                return "source,target,relation\n"
+            elif format == "dot":
+                return "digraph {\n}\n"
+            elif format == "graphml":
+                # Return minimal GraphML
+                pass  # Fall through to normal export
+
         try:
             if format == "dot":
                 return self._export_dot()
@@ -926,9 +989,13 @@ class GraphEngine:
             elif format == "json":
                 return self._export_json()
             else:
-                raise ValueError(f"Unsupported export format: {format}")
+                raise ValueError(f"Unsupported export format '{format}'. Supported formats: dot, csv, graphml, json.")
+        except ValueError:
+            # Re-raise ValueError with original message
+            raise
         except Exception as e:
-            raise ValueError(f"Export failed: {str(e)}")
+            # Wrap other exceptions with helpful context
+            raise ValueError(f"Export failed ({format} format): {str(e)}")
 
     def _export_dot(self) -> str:
         """Export to DOT format using pydot."""
