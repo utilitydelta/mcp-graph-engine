@@ -2,15 +2,24 @@
 
 from typing import List, Dict, Any, Optional, Tuple
 import networkx as nx
+import numpy as np
 from .matcher import Matcher, MatchResult
 
 
 class GraphEngine:
     """Wrapper around NetworkX DiGraph with MCP-friendly operations."""
 
-    def __init__(self):
+    def __init__(self, embeddings: Optional[Dict[str, np.ndarray]] = None):
+        """
+        Initialize the graph engine.
+
+        Args:
+            embeddings: Optional dict mapping node labels to embedding vectors
+        """
         self.graph = nx.DiGraph()
-        self.matcher = Matcher()
+        self.embeddings = embeddings if embeddings is not None else {}
+        self.matcher = Matcher(self.embeddings)
+        self._embedding_model = None  # Lazy-loaded
 
     def add_node(
         self, label: str, node_type: Optional[str] = None, properties: Optional[Dict[str, Any]] = None
@@ -37,6 +46,10 @@ class GraphEngine:
 
         self.graph.add_node(label, **attrs)
 
+        # Compute and cache embedding for new nodes
+        if created and label not in self.embeddings:
+            self._compute_embedding(label)
+
         # Return node data
         node_data = {
             'label': label,
@@ -45,6 +58,21 @@ class GraphEngine:
         }
 
         return node_data, created
+
+    def _compute_embedding(self, label: str):
+        """
+        Compute and cache the embedding for a node label.
+
+        Args:
+            label: Node label to compute embedding for
+        """
+        if self._embedding_model is None:
+            from sentence_transformers import SentenceTransformer
+            from .matcher import MATCHING_CONFIG
+            self._embedding_model = SentenceTransformer(MATCHING_CONFIG["embedding_model"])
+
+        embedding = self._embedding_model.encode(label, convert_to_numpy=True)
+        self.embeddings[label] = embedding
 
     def add_nodes(self, nodes: List[Dict[str, Any]]) -> Tuple[int, int]:
         """
@@ -129,6 +157,51 @@ class GraphEngine:
                 break
 
         return nodes
+
+    def find_node(self, query: str) -> Dict[str, Any]:
+        """
+        Find nodes matching the query using fuzzy matching.
+
+        Args:
+            query: Query string to match against node labels
+
+        Returns:
+            Dict with 'matches' list containing matching nodes with similarity scores
+        """
+        existing_labels = list(self.graph.nodes())
+        match_result = self.matcher.find_match(query, existing_labels)
+
+        matches = []
+
+        # If we have candidates (ambiguous match), return all of them
+        if match_result.candidates:
+            for label, similarity in match_result.candidates:
+                attrs = self.graph.nodes[label]
+                node_type = attrs.get('type')
+                properties = {k: v for k, v in attrs.items() if k != 'type'}
+
+                matches.append({
+                    'label': label,
+                    'similarity': similarity,
+                    'type': node_type,
+                    'properties': properties
+                })
+
+        # If we have a single match, return it
+        elif match_result.matched_label:
+            label = match_result.matched_label
+            attrs = self.graph.nodes[label]
+            node_type = attrs.get('type')
+            properties = {k: v for k, v in attrs.items() if k != 'type'}
+
+            matches.append({
+                'label': label,
+                'similarity': match_result.similarity,
+                'type': node_type,
+                'properties': properties
+            })
+
+        return {'matches': matches}
 
     def add_edge(
         self,

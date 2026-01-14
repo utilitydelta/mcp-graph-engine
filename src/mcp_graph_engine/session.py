@@ -22,10 +22,13 @@ class SessionManager:
             GraphEngine instance
         """
         if name not in self.graphs:
-            # Auto-create graph on first access
+            # Create embeddings dict that will be shared between GraphEngine and its Matcher
+            embeddings = {}
+
+            # Auto-create graph on first access with shared embeddings
             self.graphs[name] = {
-                'graph': GraphEngine(),
-                'embeddings': {},  # For future fuzzy matching with embeddings
+                'graph': GraphEngine(embeddings=embeddings),
+                'embeddings': embeddings,  # Keep reference for potential future use
                 'created_at': datetime.now(),
                 'last_accessed': datetime.now()
             }

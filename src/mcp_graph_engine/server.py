@@ -72,27 +72,9 @@ class GraphServer:
         elif name == "find_node":
             graph = self.session_manager.get_graph(graph_name)
             query = args["query"]
-            # Use matcher to find nodes
-            from .matcher import Matcher
-            matcher = Matcher()
-            match = matcher.find_match(query, list(graph.graph.nodes()))
-
-            if match.matched_label:
-                # Get node data
-                node_attrs = graph.graph.nodes[match.matched_label]
-                node_type = node_attrs.get('type')
-                properties = {k: v for k, v in node_attrs.items() if k != 'type'}
-
-                return {
-                    "matches": [{
-                        "label": match.matched_label,
-                        "similarity": 1.0 if match.exact else 0.9,
-                        "type": node_type,
-                        "properties": properties
-                    }]
-                }
-            else:
-                return {"matches": []}
+            # Use GraphEngine's find_node method (includes embedding-based matching)
+            result = graph.find_node(query)
+            return result
 
         elif name == "remove_node":
             graph = self.session_manager.get_graph(graph_name)

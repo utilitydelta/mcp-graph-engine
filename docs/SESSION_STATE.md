@@ -1,23 +1,22 @@
 # MCP Graph Engine - Session State
 
 ## Current Phase
-Phase 1: Project Setup & Core Foundation
+Phase 2: Fuzzy Matching with Embeddings
 
 ## Completed Phases
-(none yet)
+- Phase 1: Core Foundation ✓ (commit d7fb7a4)
 
 ## Next Actions
-1. Set up Python project structure with pyproject.toml
-2. Create MCP server skeleton with stdio transport
-3. Implement NetworkX-based graph engine with DiGraph
-4. Implement session manager with named graphs
-5. Add basic CRUD operations (add/remove nodes/edges)
-6. Implement exact and normalized matching
+1. Integrate sentence-transformers (all-MiniLM-L6-v2)
+2. Implement embedding computation and caching per-graph
+3. Add similarity search with cosine similarity
+4. Handle ambiguity detection (multiple close matches)
+5. Update Matcher class to use embeddings as fallback
 
 ## Phase Plan
 | Phase | Focus | Description |
 |-------|-------|-------------|
-| 1 | Core Foundation | Project setup, MCP server, NetworkX integration, session manager, basic CRUD |
+| 1 | Core Foundation | Project setup, MCP server, NetworkX integration, session manager, basic CRUD ✓ |
 | 2 | Fuzzy Matching | sentence-transformers integration, embedding cache, similarity search |
 | 3 | Query & Analysis | Path algorithms, PageRank, centrality, components, cycles |
 | 4 | Import/Export | DOT, CSV, JSON, GraphML format support |
@@ -25,9 +24,14 @@ Phase 1: Project Setup & Core Foundation
 
 ## Design Anchors
 - Spec: DESIGN.md
-- Part 4: Architecture (NetworkX, session management)
-- Part 5: MCP Tool Interface (all tool definitions)
-- Part 6: Fuzzy Matching Implementation
+- Part 6: Fuzzy Matching Implementation (section 6.1-6.4)
+- Embedding model: all-MiniLM-L6-v2 (~80MB, 384-dim, local)
+- Similarity threshold: 0.75 for auto-match
+- Ambiguity threshold: 0.05 (if top matches within this range, return candidates)
 
 ## Active Stubs
-(none yet)
+(none)
+
+## Key Files for Phase 2
+- src/mcp_graph_engine/matcher.py - Add embedding-based matching
+- src/mcp_graph_engine/session.py - Store embeddings per graph session
