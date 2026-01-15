@@ -3,6 +3,7 @@ networkx>=3.0
 sentence-transformers>=2.2.0
 numpy>=1.24.0
 pydot>=1.4.0
+grand-cypher>=0.3.0
 
 [dev]
 pytest>=7.0.0

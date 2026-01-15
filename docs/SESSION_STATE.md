@@ -1,31 +1,37 @@
 # MCP Graph Engine - Session State
 
 ## Current Phase
-COMPLETE ✓
+Phase 1: Dependencies & Core Infrastructure
 
 ## Design Spec
-DESIGN-MERMAID-EXPORT.md - Add Mermaid flowchart export to close the round-trip loop
+DESIGN-CYPHER.md - Add Cypher query language support using grand-cypher
 
 ## Completed Phases
-- DESIGN-BEST-FRIENDS.md phases all complete (prior session)
-- DESIGN-MERMAID-EXPORT.md: Mermaid Export ✓ (commit 8c64f0e)
+- (none for this feature)
 
-## Implementation Summary
+## Phase Plan
+1. **Phase 1: Dependencies & Core Infrastructure**
+   - Add grand-cypher to pyproject.toml
+   - Create cypher.py with preprocess_cypher() and execute_cypher_query()
 
-The round-trip workflow is now complete:
-- **Import**: Mermaid → Graph (`create_from_mermaid`)
-- **Export**: Graph → Mermaid (`export_graph("mermaid")`)
+2. **Phase 2: Tool & Handler Integration**
+   - Add TOOL_CYPHER_QUERY to tools.py with comprehensive description
+   - Wire up handler in server.py
 
-### Features
-- `graph TD` format output
-- Bracket syntax for labels with spaces: `Node_ID["Label With Spaces"]`
-- HTML entity escaping for pipe chars in relations: `&#124;`
-- Empty graph returns `graph TD\n`
+3. **Phase 3: Node Label Property Mapping**
+   - Ensure nodes have `label` property for n.label access
+   - Update add_node/add_edge to set label property
 
-### Files Modified
-- `src/mcp_graph_engine/graph_engine.py` - _export_mermaid(), _sanitize_node_id()
-- `src/mcp_graph_engine/tools.py` - format enum updated
-- `tests/test_import_export.py` - 5 new tests
+4. **Phase 4: Test Suite**
+   - Unit tests for preprocessor fixes
+   - Unit tests for executor edge cases
+   - Integration tests with graph operations
 
-### Test Count
-218 tests (all passing)
+## Current Focus
+- Design spec section: "Implementation" subsections 3 & 4
+- Key files: pyproject.toml, src/mcp_graph_engine/cypher.py (new)
+
+## Design Anchors
+- grand-cypher only accepts double quotes (preprocessor must fix single quotes)
+- Edge type syntax [r:type] doesn't work - must convert to WHERE clause
+- Node label property must be explicitly set for Cypher access
