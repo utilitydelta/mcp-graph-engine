@@ -1,20 +1,20 @@
 # MCP Graph Engine - Session State
 
 ## Current Phase
-Phase 1: Dependencies & Core Infrastructure
+Phase 2: Tool & Handler Integration
 
 ## Design Spec
 DESIGN-CYPHER.md - Add Cypher query language support using grand-cypher
 
 ## Completed Phases
-- (none for this feature)
+- Phase 1: Dependencies & Core Infrastructure ✓ (commit 51d21ee)
 
 ## Phase Plan
-1. **Phase 1: Dependencies & Core Infrastructure**
+1. **Phase 1: Dependencies & Core Infrastructure** ✓
    - Add grand-cypher to pyproject.toml
    - Create cypher.py with preprocess_cypher() and execute_cypher_query()
 
-2. **Phase 2: Tool & Handler Integration**
+2. **Phase 2: Tool & Handler Integration** ← CURRENT
    - Add TOOL_CYPHER_QUERY to tools.py with comprehensive description
    - Wire up handler in server.py
 
@@ -28,10 +28,9 @@ DESIGN-CYPHER.md - Add Cypher query language support using grand-cypher
    - Integration tests with graph operations
 
 ## Current Focus
-- Design spec section: "Implementation" subsections 3 & 4
-- Key files: pyproject.toml, src/mcp_graph_engine/cypher.py (new)
+- Design spec section: "Implementation" subsections 1 & 2 (Tool Definition, Handler)
+- Key files: tools.py, server.py
 
 ## Design Anchors
-- grand-cypher only accepts double quotes (preprocessor must fix single quotes)
-- Edge type syntax [r:type] doesn't work - must convert to WHERE clause
-- Node label property must be explicitly set for Cypher access
+- Tool description must include comprehensive examples and syntax notes
+- Handler calls execute_cypher_query from cypher.py

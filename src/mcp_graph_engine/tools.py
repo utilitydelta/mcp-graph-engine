@@ -422,6 +422,71 @@ TOOL_CREATE_FROM_MERMAID = Tool(
     }
 )
 
+TOOL_CYPHER_QUERY = Tool(
+    name="cypher_query",
+    description="""Execute a Cypher query against the graph.
+
+Cypher is a declarative graph query language.
+
+IMPORTANT SYNTAX NOTES:
+- Use DOUBLE QUOTES for strings: "value" (single quotes don't work)
+- Edge types [r:type] don't work - use WHERE r.relation = "type" instead
+
+Examples:
+
+  # Find all members of the Fellowship
+  MATCH (c)-[r]->(f {label: "Fellowship_of_the_Ring"})
+  WHERE r.relation = "member_of"
+  RETURN c.label
+
+  # Find friends-of-friends
+  MATCH (a {label: "Frodo"})-[r1]->(b)-[r2]->(c)
+  WHERE r1.relation = "friends_with" AND r2.relation = "friends_with"
+  RETURN c.label
+
+  # Variable-length paths (1-3 hops)
+  MATCH (a {label: "Sauron"})-[*1..3]->(b)
+  RETURN DISTINCT b.label
+
+  # Filter by node type
+  MATCH (n)
+  WHERE n.type = "character"
+  RETURN n.label
+
+  # Find by relationship type
+  MATCH (a)-[r]->(b)
+  WHERE r.relation = "passed_to"
+  RETURN a.label, b.label
+
+  # Multiple conditions
+  MATCH (a)-[r]->(b)
+  WHERE r.relation IN ["member_of", "friends_with"] AND a.type = "character"
+  RETURN a.label, b.label
+
+  # String matching
+  MATCH (n)
+  WHERE n.label CONTAINS "Ring" OR n.label STARTS WITH "S"
+  RETURN n.label
+
+Node properties: label, type
+Edge properties: relation
+""",
+    inputSchema={
+        "type": "object",
+        "properties": {
+            "query": {
+                "type": "string",
+                "description": "Cypher query to execute"
+            },
+            "graph": {
+                "type": "string",
+                "description": "Name of the graph (defaults to 'default')"
+            }
+        },
+        "required": ["query"]
+    }
+)
+
 # All tools list
 ALL_TOOLS = [
     TOOL_ADD_FACTS,
@@ -444,4 +509,5 @@ ALL_TOOLS = [
     TOOL_IMPORT_GRAPH,
     TOOL_EXPORT_GRAPH,
     TOOL_CREATE_FROM_MERMAID,
+    TOOL_CYPHER_QUERY,
 ]

@@ -10,6 +10,7 @@ from mcp.server.stdio import stdio_server
 
 from .session import SessionManager
 from .tools import ALL_TOOLS
+from .cypher import execute_cypher_query
 
 
 def parse_knowledge_dsl(knowledge: str) -> List[Dict[str, str]]:
@@ -621,6 +622,11 @@ class GraphServer:
 
             # Reuse add_facts logic by calling it with parsed facts
             return await self._handle_tool("add_facts", {"graph": graph_name, "facts": facts})
+
+        elif name == "cypher_query":
+            query = args["query"]
+            graph = self.session_manager.get_graph(graph_name)
+            return execute_cypher_query(graph.graph, query)
 
         else:
             raise ValueError(f"Unknown tool: {name}")
