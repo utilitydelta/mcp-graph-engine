@@ -12,3 +12,6 @@ src/mcp_graph_engine.egg-info/dependency_links.txt
 src/mcp_graph_engine.egg-info/entry_points.txt
 src/mcp_graph_engine.egg-info/requires.txt
 src/mcp_graph_engine.egg-info/top_level.txt
+tests/test_core_functionality.py
+tests/test_import_export.py
+tests/test_server_integration.py
