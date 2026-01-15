@@ -64,9 +64,9 @@ Node2,Node3,uses"""
         assert result["nodes_added"] == 3
         assert result["edges_added"] == 2
 
-        # Verify nodes were created
-        list_result = await server._handle_tool("list_nodes", {})
-        assert len(list_result["nodes"]) == 3
+        # Verify nodes were created via graph info
+        info_result = await server._handle_tool("get_graph_info", {})
+        assert info_result["node_count"] == 3
 
     @pytest.mark.asyncio
     async def test_import_dot_integration(self, server):
@@ -92,13 +92,19 @@ Node2,Node3,uses"""
     async def test_export_csv_integration(self, server):
         """Test CSV export through server handlers."""
 
-        # Add some nodes and edges
-        await server._handle_tool("add_node", {"label": "A"})
-        await server._handle_tool("add_node", {"label": "B"})
-        await server._handle_tool("add_edge", {
-            "source": "A",
-            "target": "B",
-            "relation": "connects"
+        # Add some nodes and edges using import
+        json_content = """{
+            "nodes": [
+                {"label": "A"},
+                {"label": "B"}
+            ],
+            "edges": [
+                {"source": "A", "target": "B", "relation": "connects"}
+            ]
+        }"""
+        await server._handle_tool("import_graph", {
+            "format": "json",
+            "content": json_content
         })
 
         # Export as CSV
@@ -114,13 +120,19 @@ Node2,Node3,uses"""
     async def test_export_dot_integration(self, server):
         """Test DOT export through server handlers."""
 
-        # Add some nodes and edges
-        await server._handle_tool("add_node", {"label": "NodeA", "type": "class"})
-        await server._handle_tool("add_node", {"label": "NodeB", "type": "function"})
-        await server._handle_tool("add_edge", {
-            "source": "NodeA",
-            "target": "NodeB",
-            "relation": "calls"
+        # Add some nodes and edges using import
+        json_content = """{
+            "nodes": [
+                {"label": "NodeA", "type": "class"},
+                {"label": "NodeB", "type": "function"}
+            ],
+            "edges": [
+                {"source": "NodeA", "target": "NodeB", "relation": "calls"}
+            ]
+        }"""
+        await server._handle_tool("import_graph", {
+            "format": "json",
+            "content": json_content
         })
 
         # Export as DOT
@@ -136,23 +148,24 @@ Node2,Node3,uses"""
 
     @pytest.mark.asyncio
     async def test_roundtrip_through_server(self, server):
-        """Test full roundtrip: add nodes, export, import to new graph."""
+        """Test full roundtrip: import graph, export, import to new graph."""
 
-        # Create initial graph
-        await server._handle_tool("add_nodes", {
-            "graph": "original",
+        # Create initial graph using import
+        initial_json = """{
             "nodes": [
                 {"label": "A", "type": "class"},
                 {"label": "B", "type": "function"},
                 {"label": "C", "type": "module"}
-            ]
-        })
-        await server._handle_tool("add_edges", {
-            "graph": "original",
+            ],
             "edges": [
                 {"source": "A", "target": "B", "relation": "calls"},
                 {"source": "B", "target": "C", "relation": "imports"}
             ]
+        }"""
+        await server._handle_tool("import_graph", {
+            "graph": "original",
+            "format": "json",
+            "content": initial_json
         })
 
         # Export

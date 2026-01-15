@@ -1,35 +1,58 @@
 # MCP Graph Engine - Session State
 
 ## Current Phase
-COMPLETE ✓
+Phase 0: Remove Low-Level CRUD Tools (starting)
+
+## Design Spec
+DESIGN-BEST-FRIENDS.md - Making MCP Graph Engine an LLM's Best Friend
 
 ## Completed Phases
-- Phase 1: Core Foundation ✓ (commit d7fb7a4)
-- Phase 2: Fuzzy Matching with Embeddings ✓ (commit 8aaae65)
-- Phase 3: Query & Analysis Tools ✓ (commit 1801648)
-- Phase 4: Import/Export Formats ✓ (commit f8cb5e3)
-- Phase 5: Polish and Testing ✓ (commit 097fbd7)
+(none - new session)
 
-## Implementation Summary
-All phases complete. MCP Graph Engine is fully implemented per DESIGN.md spec.
+## Phase Plan
 
-### Tools (23 total)
-Graph Management: list_graphs, delete_graph, get_graph_info
-Node Operations: add_node, add_nodes, find_node, remove_node, list_nodes
-Edge Operations: add_edge, add_edges, find_edges, remove_edge, get_neighbors
-Query & Analysis: shortest_path, all_paths, pagerank, connected_components, find_cycles, transitive_reduction, degree_centrality, subgraph
-Import/Export: import_graph, export_graph
+### Phase 0: Remove Low-Level CRUD Tools
+- Remove `add_node` / `add_nodes` tools
+- Remove `add_edge` / `add_edges` tools
+- Remove `find_node` tool
+- Remove `find_edges` tool
+- Remove `list_nodes` tool
+- Remove `get_neighbors` tool
+- Rename `remove_node` → `forget`
+- Rename `remove_edge` → `forget_relationship`
+- Update handlers and tests
 
-### Features
-- 3-tier fuzzy matching (exact → normalized → embedding)
-- 4 import/export formats (DOT, CSV, JSON, GraphML)
-- Named graph sessions with "default" fallback
-- LLM-friendly error messages with suggestions
-- Comprehensive test suite (62 tests)
+### Phase 1: Relationship-First Foundation
+- Implement `add_facts` tool (bulk relationships, auto-create nodes)
+- Node type inference with optional type parameter
 
-### Key Files
-- src/mcp_graph_engine/server.py - MCP server entry point
-- src/mcp_graph_engine/tools.py - 23 tool definitions
+### Phase 2: Simple DSL Parser
+- Implement `add_knowledge` tool with DSL parser
+- Format: `<subject> <relation> <object>`
+- Support inline type hints: `AuthService:service depends_on UserRepository:repository`
+
+### Phase 3: Query Shortcuts
+- Implement `ask_graph` with pattern matching for common queries
+- Support: "what depends on X", "path from X to Y", "cycles", etc.
+
+### Phase 4: Context Dump
+- Implement `dump_context` tool
+- Format output for LLM readability
+- Include relationship summary and key insights
+
+### Phase 5: Enhanced Mermaid
+- Implement `create_from_mermaid` tool
+- Edge labels become relation types
+- Support node type annotations
+
+## Next Actions
+1. Remove low-level CRUD tool definitions from tools.py
+2. Remove corresponding handlers from server.py
+3. Update ALL_TOOLS list
+4. Rename remove_node → forget, remove_edge → forget_relationship
+
+## Key Files
+- src/mcp_graph_engine/tools.py - Tool definitions
+- src/mcp_graph_engine/server.py - MCP server handlers
 - src/mcp_graph_engine/graph_engine.py - Core graph operations
-- src/mcp_graph_engine/matcher.py - Fuzzy matching
-- src/mcp_graph_engine/session.py - Session management
+- tests/ - Test suite
