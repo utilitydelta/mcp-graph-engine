@@ -385,7 +385,7 @@ TOOL_IMPORT_GRAPH = Tool(
 
 TOOL_EXPORT_GRAPH = Tool(
     name="export_graph",
-    description="Export the graph to various formats (DOT, CSV, GraphML, JSON)",
+    description="Export the graph to various formats (DOT, CSV, GraphML, JSON, Mermaid)",
     inputSchema={
         "type": "object",
         "properties": {
@@ -395,7 +395,7 @@ TOOL_EXPORT_GRAPH = Tool(
             },
             "format": {
                 "type": "string",
-                "enum": ["dot", "csv", "graphml", "json"],
+                "enum": ["dot", "csv", "graphml", "json", "mermaid"],
                 "description": "Format to export to"
             }
         },

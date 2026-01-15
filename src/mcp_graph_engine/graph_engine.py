@@ -975,6 +975,8 @@ class GraphEngine:
                 return "source,target,relation\n"
             elif format == "dot":
                 return "digraph {\n}\n"
+            elif format == "mermaid":
+                return "graph TD\n"
             elif format == "graphml":
                 # Return minimal GraphML
                 pass  # Fall through to normal export
@@ -988,8 +990,10 @@ class GraphEngine:
                 return self._export_graphml()
             elif format == "json":
                 return self._export_json()
+            elif format == "mermaid":
+                return self._export_mermaid()
             else:
-                raise ValueError(f"Unsupported export format '{format}'. Supported formats: dot, csv, graphml, json.")
+                raise ValueError(f"Unsupported export format '{format}'. Supported formats: dot, csv, graphml, json, mermaid.")
         except ValueError:
             # Re-raise ValueError with original message
             raise
@@ -1075,3 +1079,35 @@ class GraphEngine:
             data['edges'].append(edge_data)
 
         return json.dumps(data, indent=2)
+
+    def _sanitize_node_id(self, label: str) -> str:
+        """Generate valid Mermaid node ID from label."""
+        import re
+        return re.sub(r'[^a-zA-Z0-9]', '_', label)
+
+    def _export_mermaid(self) -> str:
+        """Export to Mermaid flowchart format."""
+        import re
+        lines = ["graph TD"]
+        node_ids = {}  # Map labels to generated IDs
+
+        # Check which nodes need sanitized IDs
+        for node in self.graph.nodes():
+            if not re.match(r'^[a-zA-Z0-9_]+$', node):
+                node_ids[node] = self._sanitize_node_id(node)
+
+        for source, target, attrs in self.graph.edges(data=True):
+            relation = attrs.get('relation', 'relates_to')
+            # Escape pipe characters in relations
+            relation_escaped = relation.replace('|', '&#124;')
+
+            src_id = node_ids.get(source, source)
+            tgt_id = node_ids.get(target, target)
+
+            # Use bracket syntax if ID differs from original label
+            src_str = f'{src_id}["{source}"]' if src_id != source else source
+            tgt_str = f'{tgt_id}["{target}"]' if tgt_id != target else target
+
+            lines.append(f"    {src_str} -->|{relation_escaped}| {tgt_str}")
+
+        return "\n".join(lines)

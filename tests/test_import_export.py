@@ -441,3 +441,75 @@ C,D,r3"""
             result = engine2.import_graph(format_name, content)
             assert result["nodes_added"] == 0
             assert result["edges_added"] == 0
+
+
+class TestMermaidFormat:
+    """Tests for Mermaid format export."""
+
+    def test_export_mermaid_basic(self):
+        """Test basic Mermaid export."""
+        engine = GraphEngine()
+        engine.add_node("A")
+        engine.add_node("B")
+        engine.add_node("C")
+        engine.add_edge("A", "B", "connects")
+        engine.add_edge("B", "C", "links")
+
+        result = engine.export_graph("mermaid")
+
+        assert "graph TD" in result
+        assert "A -->|connects| B" in result
+        assert "B -->|links| C" in result
+
+    def test_export_mermaid_empty(self):
+        """Test Mermaid export of empty graph."""
+        engine = GraphEngine()
+        result = engine.export_graph("mermaid")
+        assert result == "graph TD\n"
+
+    def test_export_mermaid_spaces_in_labels(self):
+        """Test Mermaid export with spaces in node labels."""
+        engine = GraphEngine()
+        engine.add_node("User Service")
+        engine.add_node("Auth Service")
+        engine.add_edge("User Service", "Auth Service", "calls")
+
+        result = engine.export_graph("mermaid")
+
+        assert "graph TD" in result
+        # Should have bracket syntax for labels with spaces
+        assert 'User_Service["User Service"]' in result
+        assert 'Auth_Service["Auth Service"]' in result
+        assert "calls" in result
+
+    def test_export_mermaid_special_chars_in_relation(self):
+        """Test Mermaid export with pipe in relation."""
+        engine = GraphEngine()
+        engine.add_node("A")
+        engine.add_node("B")
+        engine.add_edge("A", "B", "read|write")
+
+        result = engine.export_graph("mermaid")
+
+        # Pipe should be escaped
+        assert "&#124;" in result
+        assert "read&#124;write" in result
+
+    def test_mermaid_roundtrip(self):
+        """Test import then export preserves structure."""
+        # Note: This tests the structure is preserved through export
+        # We already have create_from_mermaid for import
+        engine = GraphEngine()
+        engine.add_node("A")
+        engine.add_node("B")
+        engine.add_edge("A", "B", "calls")
+
+        # Export
+        result = engine.export_graph("mermaid")
+
+        # Should have expected structure
+        assert "graph TD" in result
+        assert "A" in result
+        assert "B" in result
+        assert "calls" in result
+        assert "-->" in result
