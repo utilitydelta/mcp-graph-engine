@@ -1,37 +1,31 @@
 # MCP Graph Engine - Session State
 
 ## Current Phase
-Phase 1: Mermaid Export Implementation
+COMPLETE ✓
 
 ## Design Spec
 DESIGN-MERMAID-EXPORT.md - Add Mermaid flowchart export to close the round-trip loop
 
 ## Completed Phases
 - DESIGN-BEST-FRIENDS.md phases all complete (prior session)
+- DESIGN-MERMAID-EXPORT.md: Mermaid Export ✓ (commit 8c64f0e)
 
-## Phase Plan for DESIGN-MERMAID-EXPORT.md
+## Implementation Summary
 
-### Phase 1: Core Mermaid Export
-- Add `_export_mermaid()` method to GraphEngine
-- Update `export_graph()` to handle "mermaid" format
-- Update empty graph handling for mermaid
-- Update tool schema in tools.py
+The round-trip workflow is now complete:
+- **Import**: Mermaid → Graph (`create_from_mermaid`)
+- **Export**: Graph → Mermaid (`export_graph("mermaid")`)
 
-### Phase 2: Edge Cases & Tests
-- Handle node IDs with spaces (bracket syntax)
-- Escape special characters in relations (pipe chars)
-- Add unit tests for all cases
-- Round-trip test
+### Features
+- `graph TD` format output
+- Bracket syntax for labels with spaces: `Node_ID["Label With Spaces"]`
+- HTML entity escaping for pipe chars in relations: `&#124;`
+- Empty graph returns `graph TD\n`
 
-## Next Actions
-1. Implement _export_mermaid() method
-2. Update export_graph() method
-3. Update tools.py format enum
-4. Add tests
+### Files Modified
+- `src/mcp_graph_engine/graph_engine.py` - _export_mermaid(), _sanitize_node_id()
+- `src/mcp_graph_engine/tools.py` - format enum updated
+- `tests/test_import_export.py` - 5 new tests
 
-## Active Stubs
-None
-
-## Design Anchors
-- DESIGN-MERMAID-EXPORT.md sections 1-4 for implementation
-- Edge cases section for sanitization logic
+### Test Count
+218 tests (all passing)

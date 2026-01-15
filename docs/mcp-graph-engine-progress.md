@@ -305,3 +305,37 @@ All phases of DESIGN-BEST-FRIENDS.md are implemented:
 - **2 query methods**: ask_graph, dump_context
 - **LLM-native**: Natural language, DSL, Mermaid formats
 
+---
+
+## Mermaid Export (DESIGN-MERMAID-EXPORT.md)
+
+### Phase Summary
+**Completed**: (commit 8c64f0e)
+
+### What was done
+- Added `_export_mermaid()` method to GraphEngine
+- Added `_sanitize_node_id()` helper for labels with spaces/special chars
+- Updated `export_graph()` to handle "mermaid" format
+- Updated tools.py format enum to include "mermaid"
+- Added 5 tests covering basic, empty, spaces, special chars, roundtrip
+
+### Key decisions
+- Used `graph TD` (top-down) as default direction
+- Bracket syntax for labels with spaces: `Node_ID["Label With Spaces"]`
+- HTML entity `&#124;` for pipe characters in relation labels
+- Default relation: `relates_to` (matching design spec)
+
+### Files modified
+- src/mcp_graph_engine/graph_engine.py - Added _export_mermaid(), _sanitize_node_id()
+- src/mcp_graph_engine/tools.py - Updated format enum
+- tests/test_import_export.py - Added TestMermaidFormat class
+
+### Integration status
+- Build: ✓
+- Tests: ✓ (218 tests, 100% pass rate)
+- Total tools: 20
+
+### Round-trip workflow complete
+- Import: `create_from_mermaid` (Mermaid → Graph)
+- Export: `export_graph("mermaid")` (Graph → Mermaid)
+
