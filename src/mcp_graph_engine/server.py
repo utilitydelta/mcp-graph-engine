@@ -496,6 +496,10 @@ class GraphServer:
             query = args["query"]
             return parse_ask_query(query, graph)
 
+        elif name == "dump_context":
+            graph = self.session_manager.get_graph(graph_name)
+            return self._dump_context(graph, graph_name)
+
         # Import/Export tools
         elif name == "import_graph":
             graph = self.session_manager.get_graph(graph_name)
@@ -512,6 +516,147 @@ class GraphServer:
 
         else:
             raise ValueError(f"Unknown tool: {name}")
+
+    def _dump_context(self, graph, graph_name: str) -> Dict[str, str]:
+        """
+        Generate a complete readable summary of the graph state.
+
+        Args:
+            graph: GraphEngine instance
+            graph_name: Name of the graph
+
+        Returns:
+            Dict with 'context' key containing formatted text summary
+        """
+        lines = []
+        lines.append(f"=== Graph Context: {graph_name} ===")
+        lines.append("")
+
+        # Get basic stats
+        stats = graph.get_stats()
+        node_count = stats['node_count']
+        edge_count = stats['edge_count']
+        node_types = stats.get('node_types', {})
+
+        # Statistics section
+        lines.append("## Statistics")
+        lines.append(f"- {node_count} nodes, {edge_count} edges")
+
+        if node_types:
+            type_count = len([t for t in node_types if t != 'unknown'])
+            lines.append(f"- {type_count} node types: {', '.join(sorted([t for t in node_types if t != 'unknown']))}")
+
+        # Check for cycles
+        cycles_result = graph.find_cycles()
+        has_cycles = cycles_result.get('has_cycles', False)
+        cycle_count = len(cycles_result.get('cycles', []))
+        if has_cycles:
+            lines.append(f"- Cycles detected: Yes ({cycle_count} cycles)")
+        else:
+            lines.append("- Cycles detected: No")
+
+        lines.append("")
+
+        # Handle empty graph
+        if node_count == 0:
+            lines.append("(Graph is empty)")
+            return {"context": "\n".join(lines)}
+
+        # Nodes by Type section
+        lines.append("## Nodes by Type")
+        lines.append("")
+
+        nodes = graph.list_nodes()
+        nodes_by_type = {}
+        for node in nodes:
+            node_type = node.get('type') or 'unknown'
+            if node_type not in nodes_by_type:
+                nodes_by_type[node_type] = []
+            nodes_by_type[node_type].append(node['label'])
+
+        # Sort types (put 'unknown' last)
+        sorted_types = sorted([t for t in nodes_by_type.keys() if t != 'unknown'])
+        if 'unknown' in nodes_by_type:
+            sorted_types.append('unknown')
+
+        for node_type in sorted_types:
+            type_nodes = sorted(nodes_by_type[node_type])
+            lines.append(f"### {node_type} ({len(type_nodes)} nodes)")
+            for node_label in type_nodes:
+                lines.append(f"- {node_label}")
+            lines.append("")
+
+        # Relationships section
+        lines.append(f"## Relationships ({edge_count} total)")
+        lines.append("")
+
+        if edge_count > 0:
+            edges = graph.find_edges()
+            # Sort edges for consistency
+            sorted_edges = sorted(edges, key=lambda e: (e['source'], e['target']))
+
+            for edge in sorted_edges:
+                relation = edge.get('relation', 'related_to')
+                lines.append(f"- {edge['source']} {relation} {edge['target']}")
+        else:
+            lines.append("(No relationships)")
+
+        lines.append("")
+
+        # Key Insights section
+        lines.append("## Key Insights")
+        lines.append("")
+
+        # Find most connected nodes using actual degree counts
+        # Calculate actual degrees (not normalized centrality)
+        degree_counts = []
+        for node in nodes:
+            in_degree = graph.graph.in_degree(node['label'])
+            out_degree = graph.graph.out_degree(node['label'])
+            total_degree = in_degree + out_degree
+            if total_degree > 0:  # Only include connected nodes
+                degree_counts.append({
+                    'label': node['label'],
+                    'in_degree': in_degree,
+                    'out_degree': out_degree,
+                    'total': total_degree
+                })
+
+        # Sort by total degree
+        degree_counts.sort(key=lambda x: x['total'], reverse=True)
+
+        if degree_counts:
+            top_node = degree_counts[0]
+            lines.append(f"- Most connected: {top_node['label']} ({top_node['total']} connections)")
+
+            # List hubs (nodes with >= 2 total connections)
+            hubs = [r['label'] for r in degree_counts[:3] if r['total'] >= 2]
+            if len(hubs) > 1:
+                lines.append(f"- Hubs: {', '.join(hubs)}")
+
+        # Find isolated nodes (orphans)
+        orphans = []
+        for node in nodes:
+            neighbors = graph.get_neighbors(node['label'], direction="both")
+            if not neighbors:
+                orphans.append(node['label'])
+
+        if orphans:
+            lines.append(f"- Isolated nodes: {', '.join(sorted(orphans))}")
+        else:
+            lines.append("- Isolated nodes: None")
+
+        # List cycles if they exist
+        if has_cycles:
+            cycles = cycles_result.get('cycles', [])
+            lines.append(f"- Cycles:")
+            for cycle in cycles[:3]:  # Show first 3 cycles
+                cycle_str = ' -> '.join(cycle + [cycle[0]])
+                lines.append(f"  - {cycle_str}")
+            if len(cycles) > 3:
+                lines.append(f"  - ... and {len(cycles) - 3} more")
+
+        return {"context": "\n".join(lines)}
 
     async def run(self):
         """Run the server with stdio transport."""

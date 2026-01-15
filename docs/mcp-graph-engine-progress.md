@@ -222,3 +222,39 @@ N/A
 - Tests: ✓ (79 tests, 100% pass rate)
 - Total tools: 16
 
+---
+
+### Phase 2 Summary
+**Completed**: (commit dda858f)
+
+### What was done
+- Implemented `add_knowledge` tool with DSL parser
+- Format: "Subject relation Object" (one per line)
+- Support type hints: "Subject:type relation Object:type"
+- Comments (#) and empty lines ignored
+- Line-number error messages for malformed input
+- Delegates to add_facts internally
+
+### Integration status
+- Build: ✓
+- Tests: ✓ (111 tests)
+- Total tools: 17
+
+---
+
+### Phase 3 Summary
+**Completed**: (commit f68907c)
+
+### What was done
+- Implemented `ask_graph` tool for natural language queries
+- Dependency queries: "what depends on X", "dependents of X"
+- Path queries: "path from X to Y", "all paths from X to Y"
+- Analysis queries: "cycles", "most connected", "orphans", "components"
+- Graceful fallback with help for unrecognized queries
+- Added 31 tests (unit + integration)
+
+### Integration status
+- Build: ✓
+- Tests: ✓ (158 tests)
+- Total tools: 18
+

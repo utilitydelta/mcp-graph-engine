@@ -342,6 +342,21 @@ TOOL_ASK_GRAPH = Tool(
     }
 )
 
+TOOL_DUMP_CONTEXT = Tool(
+    name="dump_context",
+    description="Get a complete readable summary of the graph state. Returns nodes by type, all relationships, and key insights (hubs, cycles, orphans). This is perfect for LLMs to refresh their memory of the entire graph with one call.",
+    inputSchema={
+        "type": "object",
+        "properties": {
+            "graph": {
+                "type": "string",
+                "description": "Name of the graph (defaults to 'default')"
+            }
+        },
+        "required": []
+    }
+)
+
 # Import/Export Tools
 
 TOOL_IMPORT_GRAPH = Tool(
@@ -406,6 +421,7 @@ ALL_TOOLS = [
     TOOL_DEGREE_CENTRALITY,
     TOOL_SUBGRAPH,
     TOOL_ASK_GRAPH,
+    TOOL_DUMP_CONTEXT,
     TOOL_IMPORT_GRAPH,
     TOOL_EXPORT_GRAPH,
 ]
