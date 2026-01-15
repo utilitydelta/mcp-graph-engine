@@ -4,3 +4,5 @@ venv
 *.pyc
 .pytest_cache
 /test_*.py
+*.egg-info/
+uv.lock
