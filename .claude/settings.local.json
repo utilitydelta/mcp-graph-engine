@@ -11,7 +11,12 @@
       "mcp__graph-engine__connected_components",
       "mcp__graph-engine__all_paths",
       "mcp__graph-engine__add_knowledge",
-      "mcp__graph-engine__dump_context"
+      "mcp__graph-engine__dump_context",
+      "mcp__graph-engine__list_graphs",
+      "WebFetch(domain:archive.org)",
+      "mcp__graph-engine__subgraph",
+      "mcp__excalidraw__create_from_mermaid",
+      "mcp__graph-engine__ask_graph"
     ]
   }
 }
