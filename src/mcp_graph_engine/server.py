@@ -2,13 +2,82 @@
 
 import json
 import sys
-from typing import Any, Sequence
+from typing import Any, Sequence, Dict, List
 from mcp.server import Server
 from mcp.types import Tool, TextContent
 from mcp.server.stdio import stdio_server
 
 from .session import SessionManager
 from .tools import ALL_TOOLS
+
+
+def parse_knowledge_dsl(knowledge: str) -> List[Dict[str, str]]:
+    """Parse the simple DSL format into facts.
+
+    Format:
+        Subject relation Object
+        Subject:type relation Object:type
+        # Comments are ignored
+        Empty lines are ignored
+
+    Args:
+        knowledge: Multi-line string with DSL format
+
+    Returns:
+        List of fact dictionaries suitable for add_facts
+
+    Raises:
+        ValueError: If a line is malformed
+    """
+    facts = []
+
+    for line_num, line in enumerate(knowledge.split('\n'), start=1):
+        # Strip whitespace
+        line = line.strip()
+
+        # Skip empty lines and comments
+        if not line or line.startswith('#'):
+            continue
+
+        # Split into parts
+        parts = line.split()
+
+        if len(parts) != 3:
+            raise ValueError(
+                f"Line {line_num}: Expected 3 parts (subject relation object), got {len(parts)}: '{line}'"
+            )
+
+        subject_part, relation, object_part = parts
+
+        # Parse subject (handle optional type hint)
+        if ':' in subject_part:
+            subject, subject_type = subject_part.split(':', 1)
+        else:
+            subject = subject_part
+            subject_type = None
+
+        # Parse object (handle optional type hint)
+        if ':' in object_part:
+            obj, object_type = object_part.split(':', 1)
+        else:
+            obj = object_part
+            object_type = None
+
+        # Build fact dictionary
+        fact = {
+            "from": subject,
+            "to": obj,
+            "rel": relation
+        }
+
+        if subject_type:
+            fact["from_type"] = subject_type
+        if object_type:
+            fact["to_type"] = object_type
+
+        facts.append(fact)
+
+    return facts
 
 
 class GraphServer:
@@ -87,6 +156,14 @@ class GraphServer:
                 "edges_created": edges_created,
                 "edges_existed": edges_existed
             }
+
+        elif name == "add_knowledge":
+            # Parse DSL into facts
+            knowledge = args["knowledge"]
+            facts = parse_knowledge_dsl(knowledge)
+
+            # Reuse add_facts logic by calling it with parsed facts
+            return await self._handle_tool("add_facts", {"graph": graph_name, "facts": facts})
 
         # Graph management tools
         elif name == "list_graphs":

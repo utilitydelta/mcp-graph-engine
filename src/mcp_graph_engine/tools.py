@@ -51,6 +51,25 @@ TOOL_ADD_FACTS = Tool(
     }
 )
 
+TOOL_ADD_KNOWLEDGE = Tool(
+    name="add_knowledge",
+    description="Add knowledge using a simple text format. One relationship per line: 'Subject relation Object'. Supports optional type hints: 'Subject:type relation Object:type'. Lines starting with # are comments, empty lines are ignored.",
+    inputSchema={
+        "type": "object",
+        "properties": {
+            "graph": {
+                "type": "string",
+                "description": "Name of the graph (defaults to 'default')"
+            },
+            "knowledge": {
+                "type": "string",
+                "description": "Text-based DSL for relationships. Format: 'Subject relation Object' (one per line). Optional type hints: 'Subject:type relation Object:type'. Comments start with #."
+            }
+        },
+        "required": ["knowledge"]
+    }
+)
+
 TOOL_LIST_GRAPHS = Tool(
     name="list_graphs",
     description="List all graph sessions with their basic statistics",
@@ -353,6 +372,7 @@ TOOL_EXPORT_GRAPH = Tool(
 # All tools list
 ALL_TOOLS = [
     TOOL_ADD_FACTS,
+    TOOL_ADD_KNOWLEDGE,
     TOOL_LIST_GRAPHS,
     TOOL_DELETE_GRAPH,
     TOOL_GET_GRAPH_INFO,

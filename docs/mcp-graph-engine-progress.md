@@ -195,9 +195,30 @@ N/A
 - **Import/Export (2)**: import_graph, export_graph
 
 ### Next phases
-- Phase 1: add_facts (relationship-first bulk creation)
 - Phase 2: add_knowledge (DSL parser)
 - Phase 3: ask_graph (natural language queries)
 - Phase 4: dump_context (LLM memory refresh)
 - Phase 5: create_from_mermaid (diagram-based creation)
+
+---
+
+### Phase 1 Summary
+**Completed**: (commit 4baa1af)
+
+### What was done
+- Implemented `add_facts` tool - primary way to add knowledge
+- Auto-creates nodes if they don't exist (default type: "entity")
+- Optional type hints via from_type/to_type parameters
+- Returns summary: nodes_created, nodes_existed, edges_created, edges_existed
+- Added 17 comprehensive tests
+
+### Key decisions
+- Used "from/to/rel" naming for natural LLM usage
+- Default node type is "entity" when not specified
+- Idempotent: adding same fact twice doesn't duplicate
+
+### Integration status
+- Build: ✓
+- Tests: ✓ (79 tests, 100% pass rate)
+- Total tools: 16
 
