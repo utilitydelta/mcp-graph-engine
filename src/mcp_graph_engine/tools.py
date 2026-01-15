@@ -6,6 +6,51 @@ from mcp.types import Tool, TextContent
 
 # Graph Management Tools
 
+TOOL_ADD_FACTS = Tool(
+    name="add_facts",
+    description="Add facts (relationships) to the graph. Nodes are auto-created if they don't exist. This is the primary way to add knowledge to the graph.",
+    inputSchema={
+        "type": "object",
+        "properties": {
+            "graph": {
+                "type": "string",
+                "description": "Name of the graph (defaults to 'default')"
+            },
+            "facts": {
+                "type": "array",
+                "description": "Array of relationship facts to add",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "from": {
+                            "type": "string",
+                            "description": "Source node label (will be created if doesn't exist)"
+                        },
+                        "to": {
+                            "type": "string",
+                            "description": "Target node label (will be created if doesn't exist)"
+                        },
+                        "rel": {
+                            "type": "string",
+                            "description": "Relationship type"
+                        },
+                        "from_type": {
+                            "type": "string",
+                            "description": "Optional type for source node (defaults to 'entity')"
+                        },
+                        "to_type": {
+                            "type": "string",
+                            "description": "Optional type for target node (defaults to 'entity')"
+                        }
+                    },
+                    "required": ["from", "to", "rel"]
+                }
+            }
+        },
+        "required": ["facts"]
+    }
+)
+
 TOOL_LIST_GRAPHS = Tool(
     name="list_graphs",
     description="List all graph sessions with their basic statistics",
@@ -307,6 +352,7 @@ TOOL_EXPORT_GRAPH = Tool(
 
 # All tools list
 ALL_TOOLS = [
+    TOOL_ADD_FACTS,
     TOOL_LIST_GRAPHS,
     TOOL_DELETE_GRAPH,
     TOOL_GET_GRAPH_INFO,

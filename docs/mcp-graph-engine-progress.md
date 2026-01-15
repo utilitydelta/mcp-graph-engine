@@ -159,12 +159,45 @@ N/A
 
 ---
 
-## Project Complete
+---
 
-The MCP Graph Engine is fully implemented per DESIGN.md spec:
-- 23 MCP tools
-- 3-tier fuzzy matching
-- 4 import/export formats
-- Comprehensive test suite
-- LLM-friendly error handling
+## LLM-Friendly API Redesign (DESIGN-BEST-FRIENDS.md)
+
+### Phase 0 Summary
+**Completed**: New session (commit 3524aa5)
+
+### What was done
+- Removed 8 low-level CRUD tools from MCP API surface:
+  - add_node, add_nodes (replaced by add_facts in Phase 1)
+  - add_edge, add_edges (replaced by add_facts in Phase 1)
+  - find_node, find_edges, get_neighbors (replaced by ask_graph in Phase 3)
+  - list_nodes (replaced by dump_context in Phase 4)
+- Renamed tools for LLM-native ergonomics:
+  - remove_node → forget
+  - remove_edge → forget_relationship
+- Updated server handlers to match
+- Fixed tests to use import_graph for data setup
+
+### Key decisions
+- Internal GraphEngine methods preserved (needed for import/export)
+- Only removed MCP tool interface, not underlying functionality
+- "forget" is more intuitive than "remove_node" for LLMs
+
+### Integration status
+- Build: ✓
+- Tests: ✓ (62 tests, 100% pass rate)
+- Total tools: 15 (down from 23)
+
+### Current tool surface
+- **Graph Management (3)**: list_graphs, delete_graph, get_graph_info
+- **Correction (2)**: forget, forget_relationship
+- **Query & Analysis (8)**: shortest_path, all_paths, pagerank, connected_components, find_cycles, transitive_reduction, degree_centrality, subgraph
+- **Import/Export (2)**: import_graph, export_graph
+
+### Next phases
+- Phase 1: add_facts (relationship-first bulk creation)
+- Phase 2: add_knowledge (DSL parser)
+- Phase 3: ask_graph (natural language queries)
+- Phase 4: dump_context (LLM memory refresh)
+- Phase 5: create_from_mermaid (diagram-based creation)
 

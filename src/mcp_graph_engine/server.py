@@ -43,8 +43,53 @@ class GraphServer:
         # Extract graph name (defaults to "default")
         graph_name = args.get("graph", "default")
 
+        # Creation tools
+        if name == "add_facts":
+            graph = self.session_manager.get_graph(graph_name)
+            facts = args["facts"]
+
+            nodes_created = 0
+            nodes_existed = 0
+            edges_created = 0
+            edges_existed = 0
+
+            for fact in facts:
+                from_label = fact["from"]
+                to_label = fact["to"]
+                relation = fact["rel"]
+                from_type = fact.get("from_type", "entity")
+                to_type = fact.get("to_type", "entity")
+
+                # Auto-create "from" node if it doesn't exist
+                _, from_created = graph.add_node(from_label, node_type=from_type)
+                if from_created:
+                    nodes_created += 1
+                else:
+                    nodes_existed += 1
+
+                # Auto-create "to" node if it doesn't exist
+                _, to_created = graph.add_node(to_label, node_type=to_type)
+                if to_created:
+                    nodes_created += 1
+                else:
+                    nodes_existed += 1
+
+                # Add the edge
+                _, edge_created, _, _ = graph.add_edge(from_label, to_label, relation)
+                if edge_created:
+                    edges_created += 1
+                else:
+                    edges_existed += 1
+
+            return {
+                "nodes_created": nodes_created,
+                "nodes_existed": nodes_existed,
+                "edges_created": edges_created,
+                "edges_existed": edges_existed
+            }
+
         # Graph management tools
-        if name == "list_graphs":
+        elif name == "list_graphs":
             return {"graphs": self.session_manager.list_graphs()}
 
         elif name == "delete_graph":
