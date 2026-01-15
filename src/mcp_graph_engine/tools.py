@@ -403,6 +403,25 @@ TOOL_EXPORT_GRAPH = Tool(
     }
 )
 
+TOOL_CREATE_FROM_MERMAID = Tool(
+    name="create_from_mermaid",
+    description="Create graph from Mermaid flowchart syntax. Edge labels become relation types. Default relation is 'relates_to' if no label is specified.",
+    inputSchema={
+        "type": "object",
+        "properties": {
+            "graph": {
+                "type": "string",
+                "description": "Name of the graph (defaults to 'default')"
+            },
+            "mermaid": {
+                "type": "string",
+                "description": "Mermaid flowchart diagram text"
+            }
+        },
+        "required": ["mermaid"]
+    }
+)
+
 # All tools list
 ALL_TOOLS = [
     TOOL_ADD_FACTS,
@@ -424,4 +443,5 @@ ALL_TOOLS = [
     TOOL_DUMP_CONTEXT,
     TOOL_IMPORT_GRAPH,
     TOOL_EXPORT_GRAPH,
+    TOOL_CREATE_FROM_MERMAID,
 ]

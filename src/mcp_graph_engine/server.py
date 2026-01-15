@@ -81,6 +81,106 @@ def parse_knowledge_dsl(knowledge: str) -> List[Dict[str, str]]:
     return facts
 
 
+def parse_mermaid(mermaid: str) -> List[Dict[str, str]]:
+    """Parse Mermaid flowchart syntax into facts.
+
+    Supports:
+        - graph TD / graph LR (direction markers)
+        - A --> B (simple edge, relation defaults to 'relates_to')
+        - A -->|label| B (edge with label as relation)
+        - A -- text --> B (alternative label syntax)
+        - A ---|text| B (another label variant)
+        - A[Label] (node with display label)
+        - A(Label), A{Label} (other node shapes - label extracted)
+
+    Args:
+        mermaid: Multi-line string with Mermaid flowchart syntax
+
+    Returns:
+        List of fact dictionaries suitable for add_facts
+
+    Raises:
+        ValueError: If the Mermaid syntax is malformed
+    """
+    facts = []
+    node_labels = {}  # Map node IDs to their display labels
+
+    for line_num, line in enumerate(mermaid.split('\n'), start=1):
+        # Strip whitespace
+        line = line.strip()
+
+        # Skip empty lines and comments
+        if not line or line.startswith('%%'):
+            continue
+
+        # Skip graph direction declarations
+        if line.startswith('graph ') or line.startswith('flowchart '):
+            continue
+
+        # Pattern for edges with various syntax variants
+        # Captures: source_id, source_label, edge_type, edge_label, target_id, target_label
+
+        # Try to match edge patterns (handles multiple arrow styles and labels)
+        # Pattern breakdown:
+        # (\w+) - source node ID
+        # (?:\[([^\]]+)\]|\(([^)]+)\)|\{([^}]+)\})? - optional source label in [], (), or {}
+        # \s* - whitespace
+        # (?:-->|---|-\.-|==>|~~>|--) - arrow type
+        # (?:\|([^|]+)\||--\s*([^-]+?)\s*-->)? - optional edge label (|label| or -- label -->)
+        # \s* - whitespace
+        # (\w+) - target node ID
+        # (?:\[([^\]]+)\]|\(([^)]+)\)|\{([^}]+)\})? - optional target label in [], (), or {}
+
+        # Simplified pattern for basic support
+        # Support different arrow types: -->, ---, -.-, -.->, ==>, ~~>
+        edge_pattern = r'(\w+)(?:\[([^\]]+)\]|\(([^)]+)\)|\{([^}]+)\})?\s*(?:-->|---|\.->|-\.\->|==>|~~>)\s*(?:\|([^|]+)\|)?\s*(\w+)(?:\[([^\]]+)\]|\(([^)]+)\)|\{([^}]+)\})?'
+
+        match = re.match(edge_pattern, line)
+        if match:
+            groups = match.groups()
+            source_id = groups[0]
+            # Source label can be in [], (), or {}
+            source_label = groups[1] or groups[2] or groups[3]
+            edge_label = groups[4]
+            target_id = groups[5]
+            # Target label can be in [], (), or {}
+            target_label = groups[6] or groups[7] or groups[8]
+
+            # Store node labels if provided
+            if source_label:
+                node_labels[source_id] = source_label
+            if target_label:
+                node_labels[target_id] = target_label
+
+            # Determine source and target names (use label if available, else ID)
+            source_name = node_labels.get(source_id, source_id)
+            target_name = node_labels.get(target_id, target_id)
+
+            # Determine relation (use edge label if available, else default)
+            relation = edge_label.strip() if edge_label else "relates_to"
+
+            # Create fact
+            fact = {
+                "from": source_name,
+                "to": target_name,
+                "rel": relation
+            }
+
+            facts.append(fact)
+        else:
+            # Try to match node-only declarations (for storing labels)
+            node_pattern = r'(\w+)(?:\[([^\]]+)\]|\(([^)]+)\)|\{([^}]+)\})'
+            node_match = re.match(node_pattern, line)
+            if node_match:
+                node_id = node_match.group(1)
+                node_label = node_match.group(2) or node_match.group(3) or node_match.group(4)
+                if node_label:
+                    node_labels[node_id] = node_label
+            # Otherwise, skip lines that don't match (could be style declarations, etc.)
+
+    return facts
+
+
 def parse_ask_query(query: str, graph) -> Dict[str, Any]:
     """
     Parse natural language queries and map them to graph operations.
@@ -513,6 +613,14 @@ class GraphServer:
             graph = self.session_manager.get_graph(graph_name)
             content = graph.export_graph(format=args["format"])
             return {"content": content}
+
+        elif name == "create_from_mermaid":
+            # Parse Mermaid content into facts
+            mermaid = args["mermaid"]
+            facts = parse_mermaid(mermaid)
+
+            # Reuse add_facts logic by calling it with parsed facts
+            return await self._handle_tool("add_facts", {"graph": graph_name, "facts": facts})
 
         else:
             raise ValueError(f"Unknown tool: {name}")
