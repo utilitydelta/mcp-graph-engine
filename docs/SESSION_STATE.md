@@ -1,7 +1,7 @@
 # MCP Graph Engine - Session State
 
 ## Current Phase
-Phase 5: Enhanced Mermaid (next)
+COMPLETE ✓
 
 ## Design Spec
 DESIGN-BEST-FRIENDS.md - Making MCP Graph Engine an LLM's Best Friend
@@ -12,29 +12,44 @@ DESIGN-BEST-FRIENDS.md - Making MCP Graph Engine an LLM's Best Friend
 - Phase 2: Simple DSL Parser ✓ (commit dda858f)
 - Phase 3: Query Shortcuts ✓ (commit f68907c)
 - Phase 4: Context Dump ✓ (commit 97bf5c1)
+- Phase 5: Enhanced Mermaid ✓ (commit 4c9846e)
 
-## Phase Plan
+## Implementation Summary
 
-### Phase 5: Enhanced Mermaid (NEXT)
-- Implement `create_from_mermaid` tool
-- Edge labels become relation types
-- Support node type annotations via Mermaid styling/classes
+All phases of DESIGN-BEST-FRIENDS.md are complete. The MCP Graph Engine is now LLM-friendly with:
 
-## Current Tool Surface (19 tools)
-**Creation (2)**: add_facts, add_knowledge
-**Querying (2)**: ask_graph, dump_context
-**Graph Management (3)**: list_graphs, delete_graph, get_graph_info
-**Correction (2)**: forget, forget_relationship
-**Query & Analysis (8)**: shortest_path, all_paths, pagerank, connected_components, find_cycles, transitive_reduction, degree_centrality, subgraph
-**Import/Export (2)**: import_graph, export_graph
+### Final Tool Surface (20 tools)
 
-## Next Actions
-1. Implement create_from_mermaid tool
-2. Parse Mermaid flowchart syntax
-3. Extract edge labels as relation types
-4. Handle node styling/classes for types
-5. Write tests
+**LLM-Friendly Creation (3)**:
+- `add_facts` - Bulk relationship creation with auto-node creation
+- `add_knowledge` - DSL parser: "Subject relation Object"
+- `create_from_mermaid` - Parse Mermaid flowcharts
 
-## Key Files
-- src/mcp_graph_engine/tools.py - Tool definitions
-- src/mcp_graph_engine/server.py - MCP server handlers
+**LLM-Friendly Querying (2)**:
+- `ask_graph` - Natural language queries: "what depends on X", "path from A to B"
+- `dump_context` - Full graph state in readable text format
+
+**Graph Management (3)**:
+- `list_graphs`, `delete_graph`, `get_graph_info`
+
+**Correction (2)**:
+- `forget` (was remove_node)
+- `forget_relationship` (was remove_edge)
+
+**Analysis (8)**:
+- `shortest_path`, `all_paths`, `pagerank`, `connected_components`
+- `find_cycles`, `transitive_reduction`, `degree_centrality`, `subgraph`
+
+**Import/Export (2)**:
+- `import_graph`, `export_graph`
+
+### Key Metrics
+- Tool count: 20 (reduced from 23, but more capable)
+- Test count: 213 (all passing)
+- Friction reduction: 10 relationships now takes 1-2 calls, not 30
+
+### Success Criteria Met
+✓ Friction reduction: Capturing 10 relationships = 1-2 tool calls
+✓ LLM-native formats: DSL, Mermaid, natural queries
+✓ Memory recovery: dump_context provides full state refresh
+✓ Error tolerance: Fuzzy matching, auto-creation, sensible defaults

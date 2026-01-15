@@ -258,3 +258,50 @@ N/A
 - Tests: ✓ (158 tests)
 - Total tools: 18
 
+---
+
+### Phase 4 Summary
+**Completed**: (commit 97bf5c1)
+
+### What was done
+- Implemented `dump_context` tool for LLM memory refresh
+- Human-readable text output with markdown sections:
+  - Statistics (node/edge counts, types)
+  - Nodes grouped by type (alphabetically)
+  - Relationships in natural format
+  - Key Insights (hubs, orphans, cycles)
+- Added 20 tests
+
+### Integration status
+- Build: ✓
+- Tests: ✓ (178 tests)
+- Total tools: 19
+
+---
+
+### Phase 5 Summary
+**Completed**: (commit 4c9846e)
+
+### What was done
+- Implemented `create_from_mermaid` tool for Mermaid flowchart parsing
+- Edge labels (-->|label|) become relation types
+- Node labels extracted from brackets
+- Supports multiple arrow styles
+- Added 35 tests
+
+### Integration status
+- Build: ✓
+- Tests: ✓ (213 tests)
+- Total tools: 20
+
+---
+
+## LLM-Friendly API Redesign Complete
+
+All phases of DESIGN-BEST-FRIENDS.md are implemented:
+- **20 tools** (reduced from 23, but more capable)
+- **213 tests** (all passing)
+- **3 creation methods**: add_facts, add_knowledge, create_from_mermaid
+- **2 query methods**: ask_graph, dump_context
+- **LLM-native**: Natural language, DSL, Mermaid formats
+
