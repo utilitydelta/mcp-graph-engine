@@ -2,6 +2,7 @@
 
 import json
 import sys
+import re
 from typing import Any, Sequence, Dict, List
 from mcp.server import Server
 from mcp.types import Tool, TextContent
@@ -78,6 +79,261 @@ def parse_knowledge_dsl(knowledge: str) -> List[Dict[str, str]]:
         facts.append(fact)
 
     return facts
+
+
+def parse_ask_query(query: str, graph) -> Dict[str, Any]:
+    """
+    Parse natural language queries and map them to graph operations.
+
+    Args:
+        query: Natural language query string
+        graph: GraphEngine instance
+
+    Returns:
+        Dict with query results or error/help message
+    """
+    query_lower = query.lower().strip()
+
+    # Pattern 1: "what depends on X" / "what depends on X" → incoming edges
+    match = re.match(r'^what\s+depends\s+on\s+(.+)$', query_lower, re.IGNORECASE)
+    if match:
+        node_name = match.group(1).strip()
+        # Find nodes that point to this node (predecessors)
+        neighbors = graph.get_neighbors(node_name, direction="in")
+        if not neighbors:
+            return {
+                "query": query,
+                "interpretation": f"Find what depends on '{node_name}'",
+                "result": f"No incoming dependencies found for '{node_name}'"
+            }
+
+        dependents = [n['label'] for n in neighbors]
+        return {
+            "query": query,
+            "interpretation": f"Find what depends on '{node_name}'",
+            "result": f"Nodes that depend on '{node_name}': {', '.join(dependents)}",
+            "dependents": dependents
+        }
+
+    # Pattern 2: "what does X depend on" / "dependencies of X" → outgoing edges
+    match = re.match(r'^what\s+(?:does\s+)?(.+?)\s+depend(?:s)?\s+on$', query_lower, re.IGNORECASE)
+    if match:
+        node_name = match.group(1).strip()
+        # Find nodes this node points to (successors)
+        neighbors = graph.get_neighbors(node_name, direction="out")
+        if not neighbors:
+            return {
+                "query": query,
+                "interpretation": f"Find what '{node_name}' depends on",
+                "result": f"'{node_name}' has no outgoing dependencies"
+            }
+        dependencies = [n['label'] for n in neighbors]
+        return {
+            "query": query,
+            "interpretation": f"Find what '{node_name}' depends on",
+            "result": f"'{node_name}' depends on: {', '.join(dependencies)}",
+            "dependencies": dependencies
+        }
+
+    # Pattern 3: "dependencies of X" → outgoing edges (alternative phrasing)
+    match = re.match(r'^dependencies\s+(?:of\s+)?(.+)$', query_lower, re.IGNORECASE)
+    if match:
+        node_name = match.group(1).strip()
+        # Find nodes this node points to (successors)
+        neighbors = graph.get_neighbors(node_name, direction="out")
+        if not neighbors:
+            return {
+                "query": query,
+                "interpretation": f"Find what '{node_name}' depends on",
+                "result": f"'{node_name}' has no outgoing dependencies"
+            }
+        dependencies = [n['label'] for n in neighbors]
+        return {
+            "query": query,
+            "interpretation": f"Find what '{node_name}' depends on",
+            "result": f"'{node_name}' depends on: {', '.join(dependencies)}",
+            "dependencies": dependencies
+        }
+
+    # Pattern 4: "dependents of X" → incoming edges
+    match = re.match(r'^dependents\s+(?:of\s+)?(.+)$', query_lower, re.IGNORECASE)
+    if match:
+        node_name = match.group(1).strip()
+        neighbors = graph.get_neighbors(node_name, direction="in")
+        if not neighbors:
+            return {
+                "query": query,
+                "interpretation": f"Find dependents of '{node_name}'",
+                "result": f"No nodes depend on '{node_name}'"
+            }
+        dependents = [n['label'] for n in neighbors]
+        return {
+            "query": query,
+            "interpretation": f"Find dependents of '{node_name}'",
+            "result": f"Nodes that depend on '{node_name}': {', '.join(dependents)}",
+            "dependents": dependents
+        }
+
+    # Pattern 5: Path queries - "path from X to Y" / "shortest path X to Y" / "how to get from X to Y"
+    match = re.match(r'^(?:shortest\s+)?path\s+from\s+(.+?)\s+to\s+(.+)$', query_lower, re.IGNORECASE)
+    if not match:
+        match = re.match(r'^how\s+(?:to\s+)?(?:get\s+)?from\s+(.+?)\s+to\s+(.+)$', query_lower, re.IGNORECASE)
+    if match:
+        source = match.group(1).strip()
+        target = match.group(2).strip()
+        result = graph.shortest_path(source, target)
+        if result.get('path'):
+            path_str = ' -> '.join(result['path'])
+            return {
+                "query": query,
+                "interpretation": f"Find shortest path from '{source}' to '{target}'",
+                "result": f"Path found (length {result['length']}): {path_str}",
+                "path": result['path'],
+                "length": result['length']
+            }
+        else:
+            return {
+                "query": query,
+                "interpretation": f"Find shortest path from '{source}' to '{target}'",
+                "result": result.get('reason', 'No path found'),
+                "path": None
+            }
+
+    # Pattern 6: All paths query - "all paths from X to Y"
+    match = re.match(r'^all\s+paths?\s+from\s+(.+?)\s+to\s+(.+)$', query_lower, re.IGNORECASE)
+    if match:
+        source = match.group(1).strip()
+        target = match.group(2).strip()
+        result = graph.all_paths(source, target)
+        if result.get('count', 0) > 0:
+            paths_strs = [' -> '.join(path) for path in result['paths']]
+            return {
+                "query": query,
+                "interpretation": f"Find all paths from '{source}' to '{target}'",
+                "result": f"Found {result['count']} path(s):\n" + '\n'.join(f"  {i+1}. {p}" for i, p in enumerate(paths_strs)),
+                "paths": result['paths'],
+                "count": result['count']
+            }
+        else:
+            return {
+                "query": query,
+                "interpretation": f"Find all paths from '{source}' to '{target}'",
+                "result": result.get('reason', 'No paths found'),
+                "paths": [],
+                "count": 0
+            }
+
+    # Pattern 7: Cycles queries - "cycles" / "find cycles" / "what are the cycles"
+    if re.match(r'^(?:find\s+)?(?:what\s+are\s+(?:the\s+)?)?cycles?$', query_lower, re.IGNORECASE):
+        result = graph.find_cycles()
+        if result['has_cycles']:
+            cycles_strs = [' -> '.join(cycle + [cycle[0]]) for cycle in result['cycles']]
+            return {
+                "query": query,
+                "interpretation": "Find cycles in the graph",
+                "result": f"Found {len(result['cycles'])} cycle(s):\n" + '\n'.join(f"  {i+1}. {c}" for i, c in enumerate(cycles_strs)),
+                "cycles": result['cycles'],
+                "has_cycles": True
+            }
+        else:
+            return {
+                "query": query,
+                "interpretation": "Find cycles in the graph",
+                "result": "No cycles found - graph is acyclic",
+                "cycles": [],
+                "has_cycles": False
+            }
+
+    # Pattern 8: Most connected / important nodes / central nodes
+    if re.match(r'^(?:most\s+)?(?:connected|important|central)\s*(?:nodes?)?$', query_lower, re.IGNORECASE):
+        # Use degree centrality for "most connected"
+        result = graph.degree_centrality(top_n=10)
+        if result['rankings']:
+            rankings_str = '\n'.join(
+                f"  {i+1}. {r['label']} (in: {r['in_degree']:.2f}, out: {r['out_degree']:.2f}, total: {r['total']:.2f})"
+                for i, r in enumerate(result['rankings'])
+            )
+            return {
+                "query": query,
+                "interpretation": "Find most connected nodes",
+                "result": f"Top {len(result['rankings'])} most connected nodes:\n{rankings_str}",
+                "rankings": result['rankings']
+            }
+        else:
+            return {
+                "query": query,
+                "interpretation": "Find most connected nodes",
+                "result": "No nodes in graph",
+                "rankings": []
+            }
+
+    # Pattern 9: Orphans / isolated nodes / disconnected
+    if re.match(r'^(?:orphans?|isolated|disconnected)(?:\s+nodes?)?$', query_lower, re.IGNORECASE):
+        # Find nodes with no edges
+        nodes = graph.list_nodes()
+        orphans = []
+        for node in nodes:
+            neighbors = graph.get_neighbors(node['label'], direction="both")
+            if not neighbors:
+                orphans.append(node['label'])
+
+        if orphans:
+            return {
+                "query": query,
+                "interpretation": "Find nodes with no connections",
+                "result": f"Found {len(orphans)} isolated node(s): {', '.join(orphans)}",
+                "orphans": orphans
+            }
+        else:
+            return {
+                "query": query,
+                "interpretation": "Find nodes with no connections",
+                "result": "No isolated nodes found - all nodes have at least one connection",
+                "orphans": []
+            }
+
+    # Pattern 10: Components / clusters
+    if re.match(r'^(?:connected\s+)?(?:components?|clusters?)$', query_lower, re.IGNORECASE):
+        result = graph.connected_components()
+        if result['count'] > 0:
+            components_str = '\n'.join(
+                f"  Component {i+1} ({len(comp)} nodes): {', '.join(comp)}"
+                for i, comp in enumerate(result['components'])
+            )
+            return {
+                "query": query,
+                "interpretation": "Find connected components",
+                "result": f"Found {result['count']} connected component(s):\n{components_str}",
+                "components": result['components'],
+                "count": result['count']
+            }
+        else:
+            return {
+                "query": query,
+                "interpretation": "Find connected components",
+                "result": "No nodes in graph",
+                "components": [],
+                "count": 0
+            }
+
+    # Fallback: unrecognized query
+    return {
+        "query": query,
+        "error": "Query pattern not recognized",
+        "help": (
+            "Supported query patterns:\n"
+            "  - 'what depends on X' - find nodes that depend on X\n"
+            "  - 'what does X depend on' - find X's dependencies\n"
+            "  - 'dependencies of X' - find X's dependencies\n"
+            "  - 'dependents of X' - find what depends on X\n"
+            "  - 'path from X to Y' - find shortest path\n"
+            "  - 'all paths from X to Y' - find all paths\n"
+            "  - 'cycles' - find circular dependencies\n"
+            "  - 'most connected' - find highly connected nodes\n"
+            "  - 'orphans' - find isolated nodes\n"
+            "  - 'components' - find connected components"
+        )
+    }
 
 
 class GraphServer:
@@ -234,6 +490,11 @@ class GraphServer:
                 nodes=args["nodes"],
                 include_edges=args.get("include_edges", True)
             )
+
+        elif name == "ask_graph":
+            graph = self.session_manager.get_graph(graph_name)
+            query = args["query"]
+            return parse_ask_query(query, graph)
 
         # Import/Export tools
         elif name == "import_graph":

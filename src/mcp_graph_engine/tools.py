@@ -323,6 +323,25 @@ TOOL_SUBGRAPH = Tool(
     }
 )
 
+TOOL_ASK_GRAPH = Tool(
+    name="ask_graph",
+    description="Ask natural questions about the graph without needing to remember specific tool names. Examples: 'what depends on X', 'what does X depend on', 'path from A to B', 'cycles', 'most connected', 'orphans'",
+    inputSchema={
+        "type": "object",
+        "properties": {
+            "graph": {
+                "type": "string",
+                "description": "Name of the graph (defaults to 'default')"
+            },
+            "query": {
+                "type": "string",
+                "description": "Natural language query about the graph"
+            }
+        },
+        "required": ["query"]
+    }
+)
+
 # Import/Export Tools
 
 TOOL_IMPORT_GRAPH = Tool(
@@ -386,6 +405,7 @@ ALL_TOOLS = [
     TOOL_TRANSITIVE_REDUCTION,
     TOOL_DEGREE_CENTRALITY,
     TOOL_SUBGRAPH,
+    TOOL_ASK_GRAPH,
     TOOL_IMPORT_GRAPH,
     TOOL_EXPORT_GRAPH,
 ]
