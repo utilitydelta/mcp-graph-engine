@@ -1,13 +1,14 @@
 # MCP Graph Engine - Session State
 
 ## Current Phase
-Phase 2: Tool & Handler Integration
+Phase 3: Node Label Property Mapping + Phase 4: Test Suite
 
 ## Design Spec
 DESIGN-CYPHER.md - Add Cypher query language support using grand-cypher
 
 ## Completed Phases
 - Phase 1: Dependencies & Core Infrastructure ✓ (commit 51d21ee)
+- Phase 2: Tool & Handler Integration ✓ (commit 5dead84)
 
 ## Phase Plan
 1. **Phase 1: Dependencies & Core Infrastructure** ✓
@@ -28,8 +29,8 @@ DESIGN-CYPHER.md - Add Cypher query language support using grand-cypher
    - Integration tests with graph operations
 
 ## Current Focus
-- Design spec section: "Implementation" subsections 1 & 2 (Tool Definition, Handler)
-- Key files: tools.py, server.py
+- Design spec section: "Property Mapping" and "Testing Strategy"
+- Key files: graph_engine.py (add_node), new tests/test_cypher.py
 
 ## Design Anchors
 - Tool description must include comprehensive examples and syntax notes

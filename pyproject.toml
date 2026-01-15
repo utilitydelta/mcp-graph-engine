@@ -7,7 +7,7 @@ name = "mcp-graph-engine"
 version = "0.1.0"
 description = "MCP Graph Engine - A graph-based memory and reasoning tool for LLMs"
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 dependencies = [
     "mcp>=0.9.0",
     "networkx>=3.0",

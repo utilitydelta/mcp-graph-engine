@@ -47,6 +47,9 @@ class GraphEngine:
         if properties:
             attrs.update(properties)
 
+        # Always set label attribute for Cypher queries (n.label access)
+        attrs['label'] = label
+
         self.graph.add_node(label, **attrs)
 
         # Compute and cache embedding for new nodes

@@ -3,4 +3,4 @@ venv
 .venv
 *.pyc
 .pytest_cache
-test_*.py
+/test_*.py
