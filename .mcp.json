@@ -1,0 +1,7 @@
+{
+  "mcpServers": {
+    "graph-engine": {
+      "command": "/home/utilitydelta/repos/utilitydelta/mcp-graph-engine/.venv/bin/mcp-graph-engine"
+    }
+  }
+}

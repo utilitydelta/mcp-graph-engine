@@ -9,7 +9,9 @@
       "mcp__graph-engine__degree_centrality",
       "mcp__graph-engine__export_graph",
       "mcp__graph-engine__connected_components",
-      "mcp__graph-engine__all_paths"
+      "mcp__graph-engine__all_paths",
+      "mcp__graph-engine__add_knowledge",
+      "mcp__graph-engine__dump_context"
     ]
   }
 }

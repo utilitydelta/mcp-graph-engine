@@ -14,6 +14,11 @@ src/mcp_graph_engine.egg-info/requires.txt
 src/mcp_graph_engine.egg-info/top_level.txt
 tests/test_add_facts.py
 tests/test_add_knowledge.py
+tests/test_ask_graph.py
+tests/test_ask_graph_integration.py
 tests/test_core_functionality.py
+tests/test_dump_context.py
+tests/test_dump_context_integration.py
 tests/test_import_export.py
+tests/test_mermaid.py
 tests/test_server_integration.py
