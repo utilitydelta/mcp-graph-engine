@@ -1,0 +1,95 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mcp-graph-engine"
+version = "0.1.0"
+description = "A graph database and analysis tool for AI assistants via MCP"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.10"
+authors = [
+    {name = "utilitydelta"}
+]
+maintainers = [
+    {name = "utilitydelta"}
+]
+keywords = [
+    "mcp",
+    "graph",
+    "knowledge-graph",
+    "llm",
+    "ai-assistant",
+    "networkx",
+    "cypher",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Database :: Database Engines/Servers",
+]
+dependencies = [
+    "mcp>=0.9.0",
+    "networkx>=3.0",
+    "sentence-transformers>=2.2.0",
+    "numpy>=1.24.0",
+    "pydot>=1.4.0",
+    "grand-cypher>=0.3.0",
+    "fastapi>=0.100.0",
+    "uvicorn>=0.24.0",
+    "websockets>=11.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-asyncio>=0.21.0",
+    "pytest-cov>=4.0.0",
+    "ruff>=0.1.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[project.scripts]
+mcp-graph-engine = "mcp_graph_engine.server:main"
+
+[project.urls]
+Homepage = "https://github.com/utilitydelta/mcp-graph-engine"
+Documentation = "https://github.com/utilitydelta/mcp-graph-engine#readme"
+Repository = "https://github.com/utilitydelta/mcp-graph-engine.git"
+Issues = "https://github.com/utilitydelta/mcp-graph-engine/issues"
+Changelog = "https://github.com/utilitydelta/mcp-graph-engine/blob/main/CHANGELOG.md"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+
+[tool.ruff]
+target-version = "py310"
+line-length = 100
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort
+    "B",   # flake8-bugbear
+    "UP",  # pyupgrade
+]
+ignore = [
+    "E501",  # line too long (handled by formatter)
+]
+
+[tool.ruff.format]
+quote-style = "double"

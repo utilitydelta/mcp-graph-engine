@@ -1,0 +1,33 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(xargs -I {} sh -c 'echo \"\"=== {} ===\"\" && python3 -c \"\"import json; data=json.load\\(open\\(\\\\\"\"{}\\\\\"\", \\\\\"\"r\\\\\"\"\\)\\); cells=[c for c in data.get\\(\\\\\"\"cells\\\\\"\", []\\) if c.get\\(\\\\\"\"cell_type\\\\\"\"\\) == \\\\\"\"code\\\\\"\"]; print\\(\\\\\"\"\\\\\\\\n\\\\\"\".join\\([c.get\\(\\\\\"\"source\\\\\"\", \\\\\"\"\\\\\"\"\\) for c in cells[:10]]\\)\\)\"\" 2>/dev/null | head -100')",
+      "Bash(python3:*)",
+      "mcp__graph-engine__add_edges",
+      "mcp__graph-engine__get_graph_info",
+      "mcp__graph-engine__pagerank",
+      "mcp__graph-engine__degree_centrality",
+      "mcp__graph-engine__export_graph",
+      "mcp__graph-engine__connected_components",
+      "mcp__graph-engine__all_paths",
+      "mcp__graph-engine__add_knowledge",
+      "mcp__graph-engine__dump_context",
+      "mcp__graph-engine__list_graphs",
+      "WebFetch(domain:archive.org)",
+      "mcp__graph-engine__subgraph",
+      "mcp__excalidraw__create_from_mermaid",
+      "mcp__graph-engine__ask_graph",
+      "Bash(source:*)",
+      "Bash(pip install:*)",
+      "Bash(time pytest:*)",
+      "Bash(pytest:*)",
+      "mcp__graph-engine__visualize_graph",
+      "mcp__graph-engine__update_visualization_filter",
+      "mcp__graph-engine__cypher_query",
+      "Bash(python:*)",
+      "Bash(ls:*)",
+      "Bash(tree:*)",
+      "Bash(ruff check:*)"
+    ]
+  }
+}
