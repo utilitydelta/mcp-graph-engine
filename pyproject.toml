@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "mcp-graph-engine"
-version = "0.1.0"
+version = "0.1.1"
 description = "A graph database and analysis tool for AI assistants via MCP"
 readme = "README.md"
 license = {text = "MIT"}
@@ -58,6 +58,9 @@ dev = [
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+mcp_graph_engine = ["visualization/static/*"]
 
 [project.scripts]
 mcp-graph-engine = "mcp_graph_engine.server:main"
