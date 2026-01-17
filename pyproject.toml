@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "mcp-graph-engine"
-version = "0.1.2"
+version = "1.0.0"
 description = "A graph database and analysis tool for AI assistants via MCP"
 readme = "README.md"
 license = {text = "MIT"}
@@ -25,7 +25,7 @@ keywords = [
     "cypher",
 ]
 classifiers = [
-    "Development Status :: 4 - Beta",
+    "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",

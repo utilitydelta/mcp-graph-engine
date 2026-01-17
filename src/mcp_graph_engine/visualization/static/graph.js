@@ -13,6 +13,7 @@ class GraphVisualization {
         this.showEdgeLabels = true;
         this.sizeByDegree = true;
         this.criticalPath = new Set();
+        this.typeColors = new Map();
 
         this.setupCanvas();
         this.setupSimulation();
@@ -489,16 +490,20 @@ class GraphVisualization {
     }
 
     getNodeColor(type) {
-        const colors = {
-            'entity': '#6366f1',
-            'person': '#22c55e',
-            'service': '#f59e0b',
-            'class': '#ef4444',
-            'function': '#8b5cf6',
-            'file': '#06b6d4',
-            'default': '#6366f1'
-        };
-        return colors[type] || colors['default'];
+        if (!type) return '#6366f1';
+        if (this.typeColors.has(type)) return this.typeColors.get(type);
+
+        // Hash the type string to get a consistent hue
+        let hash = 0;
+        for (let i = 0; i < type.length; i++) {
+            hash = type.charCodeAt(i) + ((hash << 5) - hash);
+        }
+
+        // Use golden ratio to spread hues evenly
+        const hue = (Math.abs(hash) * 137.508) % 360;
+        const color = `hsl(${hue}, 65%, 55%)`;
+        this.typeColors.set(type, color);
+        return color;
     }
 
     findNodeAt(x, y) {

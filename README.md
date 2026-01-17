@@ -2,7 +2,7 @@
 
 A graph database for AI assistants via the Model Context Protocol. Build relationship graphs, run analysis algorithms, and visualize in real-time.
 
-<video src="docs/assets/lotr_readme.mp4" controls></video>
+<img alt="image" src="docs/assets/screenshot.png" />
 
 ## Installation
 
