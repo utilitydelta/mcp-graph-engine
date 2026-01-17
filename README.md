@@ -45,40 +45,53 @@ Meanwhile, you're watching the graph build in your browser at `http://localhost:
 
 ## Installation
 
-### Prerequisites
+**Requirements:** Python 3.10+ and an MCP-compatible client (Claude Code, Claude Desktop, Cursor, etc.)
 
-- Python 3.10+
-- An MCP-compatible client (Claude Code, Claude Desktop, Cursor, etc.)
-
-### Install the Package
+### 1. Install the package
 
 ```bash
-# From PyPI (when published)
+pipx install mcp-graph-engine
+```
+
+That's it. [pipx](https://pipx.pypa.io/) installs the tool in an isolated environment and adds it to your PATH.
+
+<details>
+<summary>Optional: Enable semantic matching with embeddings</summary>
+
+The default install uses exact and normalised string matching for node lookups. For semantic/fuzzy matching (e.g., "auth service" matching "AuthService"), install with embeddings support:
+
+```bash
+pipx install mcp-graph-engine[embeddings]
+```
+
+This adds `sentence-transformers` (PyTorch-based) which increases install size but enables smarter node matching.
+
+</details>
+
+<details>
+<summary>Alternative installation methods</summary>
+
+```bash
+# Using uv (fast Python package manager)
+uv tool install mcp-graph-engine
+
+# Using pip (may require manual PATH setup)
 pip install mcp-graph-engine
 
-# Or from source
+# With embeddings support
+pip install mcp-graph-engine[embeddings]
+
+# From source
 git clone https://github.com/utilitydelta/mcp-graph-engine.git
 cd mcp-graph-engine
 pip install -e .
 ```
 
-### Configure Your MCP Client
+</details>
 
-The server runs over stdio, so you need to tell your client how to start it.
+### 2. Add to your MCP client
 
-**Claude Code** (`~/.claude/settings.json` or project `.mcp.json`):
-
-```json
-{
-  "mcpServers": {
-    "graph-engine": {
-      "command": "mcp-graph-engine"
-    }
-  }
-}
-```
-
-**Claude Desktop** (`claude_desktop_config.json`):
+Add this to your MCP configuration file:
 
 ```json
 {
@@ -90,33 +103,17 @@ The server runs over stdio, so you need to tell your client how to start it.
 }
 ```
 
-**Cursor** (`.cursor/mcp.json`):
+**Where's the config file?**
 
-```json
-{
-  "mcpServers": {
-    "graph-engine": {
-      "command": "mcp-graph-engine"
-    }
-  }
-}
-```
+| Client | Location |
+|--------|----------|
+| Claude Code | `~/.mcp.json` (global) or `.mcp.json` (project) |
+| Claude Desktop | `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) |
+| Cursor | `.cursor/mcp.json` |
 
-If you installed in a virtualenv, you might need the full path:
+### 3. Restart your client
 
-```json
-{
-  "mcpServers": {
-    "graph-engine": {
-      "command": "/path/to/venv/bin/mcp-graph-engine"
-    }
-  }
-}
-```
-
-### Verify It's Working
-
-Start your MCP client and ask it to list the available tools. You should see a bunch of graph-related tools like `add_facts`, `add_knowledge`, `visualize_graph`, etc.
+Restart Claude Code / Claude Desktop / Cursor. The graph tools should now be available - ask your assistant to list its tools to verify.
 
 ## Usage
 

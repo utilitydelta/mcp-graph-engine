@@ -108,6 +108,8 @@ class GraphEngine:
             label: Node label to compute embedding for
         """
         model = get_embedding_model()
+        if model is None:
+            return
         embedding = model.encode(label, convert_to_numpy=True)
         self.embeddings[label] = embedding
 

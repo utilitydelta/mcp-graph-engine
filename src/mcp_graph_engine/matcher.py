@@ -4,6 +4,13 @@ import re
 
 import numpy as np
 
+# Check if sentence-transformers is available (optional dependency)
+try:
+    from sentence_transformers import SentenceTransformer
+    EMBEDDINGS_AVAILABLE = True
+except ImportError:
+    EMBEDDINGS_AVAILABLE = False
+
 # Matching configuration constants
 MATCHING_CONFIG = {
     "similarity_threshold": 0.75,    # Minimum similarity for auto-match
@@ -17,10 +24,11 @@ _embedding_model = None
 
 
 def get_embedding_model():
-    """Get the shared embedding model (lazy-loaded singleton)."""
+    """Get the shared embedding model (lazy-loaded singleton). Returns None if not available."""
     global _embedding_model
+    if not EMBEDDINGS_AVAILABLE:
+        return None
     if _embedding_model is None:
-        from sentence_transformers import SentenceTransformer
         _embedding_model = SentenceTransformer(MATCHING_CONFIG["embedding_model"])
     return _embedding_model
 
@@ -98,6 +106,8 @@ class Matcher:
         """
         # Compute query embedding
         query_embedding = self._get_embedding(query)
+        if query_embedding is None:
+            return None
 
         # Calculate similarities for all labels with embeddings
         similarities = []
@@ -144,7 +154,7 @@ class Matcher:
             similarity=top_similarity
         )
 
-    def _get_embedding(self, text: str) -> np.ndarray:
+    def _get_embedding(self, text: str) -> np.ndarray | None:
         """
         Get embedding for a text string.
 
@@ -152,9 +162,11 @@ class Matcher:
             text: Text to embed
 
         Returns:
-            Embedding vector as numpy array
+            Embedding vector as numpy array, or None if embeddings not available
         """
         model = get_embedding_model()
+        if model is None:
+            return None
         embedding = model.encode(text, convert_to_numpy=True)
         return embedding
 

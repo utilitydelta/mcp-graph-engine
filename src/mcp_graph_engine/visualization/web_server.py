@@ -6,6 +6,7 @@ import threading
 from pathlib import Path
 
 import networkx as nx
+import uvicorn
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
@@ -37,6 +38,7 @@ class VisualizationServer:
         self.filters: dict[str, str] = {}  # graph_name -> cypher_filter
         self._filters_lock = asyncio.Lock()
         self._server_thread: threading.Thread | None = None
+        self._server: uvicorn.Server | None = None
         self._setup_routes()
 
     def _setup_routes(self) -> None:
@@ -289,26 +291,31 @@ class VisualizationServer:
             logger.warning("Server is already running, ignoring start request")
             return
 
-        import uvicorn
+        config = uvicorn.Config(self.app, host=host, port=port, log_level="warning")
+        self._server = uvicorn.Server(config)
 
         def run_server():
-            uvicorn.run(self.app, host=host, port=port, log_level="warning")
+            self._server.run()
 
         self._server_thread = threading.Thread(target=run_server, daemon=True)
         self._server_thread.start()
         logger.info(f"Visualization server started at http://{host}:{port}")
 
     def stop(self) -> None:
-        """Stop the server.
+        """Stop the server gracefully.
 
-        Note: Clean shutdown of uvicorn from a background thread is complex.
-        Since the thread is daemonic, it will be terminated when the main
-        process exits. For explicit shutdown, consider using uvicorn's
-        Server class with shutdown() method in a future iteration.
+        Signals the uvicorn server to shut down and waits for the thread to finish.
         """
-        # STUB(server): Implement clean server shutdown
-        # Current implementation relies on daemon thread termination
-        logger.info("Server stop requested (daemon thread will terminate with process)")
+        if self._server is not None:
+            logger.info("Stopping visualization server...")
+            self._server.should_exit = True
+            if self._server_thread is not None and self._server_thread.is_alive():
+                self._server_thread.join(timeout=5.0)
+                if self._server_thread.is_alive():
+                    logger.warning("Server thread did not stop within timeout")
+            self._server = None
+            self._server_thread = None
+            logger.info("Visualization server stopped")
 
     async def broadcast_update(self, graph_name: str, update: dict) -> None:
         """Broadcast an update to all clients viewing a graph.

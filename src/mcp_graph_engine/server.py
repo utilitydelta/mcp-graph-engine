@@ -1,10 +1,12 @@
 """MCP Graph Engine server with stdio transport."""
 
+import atexit
 import json
 import logging
 import os
 import re
 import shlex
+import signal
 from collections.abc import Sequence
 from typing import Any
 
@@ -19,6 +21,9 @@ from .tools import ALL_TOOLS
 from .visualization.web_server import VisualizationServer
 
 logger = logging.getLogger(__name__)
+
+# Global reference for cleanup handlers
+_active_server: "GraphServer | None" = None
 
 
 def remove_comments(line: str) -> str:
@@ -475,6 +480,7 @@ class GraphServer:
     """MCP server for graph operations."""
 
     def __init__(self):
+        global _active_server
         self.app = Server("mcp-graph-engine")
         self.session_manager = SessionManager(on_mutation=self._handle_graph_mutation)
 
@@ -484,6 +490,31 @@ class GraphServer:
             self._start_visualization_server()
 
         self._setup_handlers()
+        self._register_cleanup()
+        _active_server = self
+
+    def _register_cleanup(self):
+        """Register cleanup handlers for graceful shutdown."""
+        atexit.register(self.cleanup)
+
+        # Register signal handlers (SIGTERM, SIGINT)
+        for sig in (signal.SIGTERM, signal.SIGINT):
+            try:
+                signal.signal(sig, self._signal_handler)
+            except (ValueError, OSError):
+                # Signal handling may not work in all contexts (e.g., non-main thread)
+                pass
+
+    def _signal_handler(self, signum, frame):
+        """Handle termination signals."""
+        logger.info(f"Received signal {signum}, cleaning up...")
+        self.cleanup()
+
+    def cleanup(self):
+        """Clean up resources (stop visualization server, etc.)."""
+        if self.vis_server is not None:
+            self.vis_server.stop()
+            self.vis_server = None
 
     def _start_visualization_server(self):
         """Start the embedded visualization server."""
@@ -1006,12 +1037,15 @@ class GraphServer:
 
     async def run(self):
         """Run the server with stdio transport."""
-        async with stdio_server() as (read_stream, write_stream):
-            await self.app.run(
-                read_stream,
-                write_stream,
-                self.app.create_initialization_options()
-            )
+        try:
+            async with stdio_server() as (read_stream, write_stream):
+                await self.app.run(
+                    read_stream,
+                    write_stream,
+                    self.app.create_initialization_options()
+                )
+        finally:
+            self.cleanup()
 
 
 def main():
