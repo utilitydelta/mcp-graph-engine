@@ -171,9 +171,11 @@ class TestAnalysisTools:
         engine.add_nodes([{"label": "A"}, {"label": "B"}, {"label": "C"}])
         engine.add_edge("A", "C", "links")
         engine.add_edge("B", "C", "links")
-        
+
         result = engine.pagerank(top_n=3)
-        assert len(result["rankings"]) == 3
+        # Check for errors first to aid debugging
+        assert "error" not in result, f"PageRank failed: {result.get('error')}"
+        assert len(result["rankings"]) == 3, f"Expected 3 rankings, got {result}"
         # C should have highest PageRank (most incoming links)
         assert result["rankings"][0]["label"] == "C"
 
