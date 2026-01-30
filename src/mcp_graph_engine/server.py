@@ -853,8 +853,8 @@ class GraphServer:
             graph = self.session_manager.get_graph(graph_name)
             nodes, edges = self.vis_server._export_for_d3(graph)
 
-            port = int(os.environ.get('VIS_PORT', '8765'))
-            host = os.environ.get('VIS_HOST', 'localhost')
+            host = self.vis_server.host
+            port = self.vis_server.port
             url = f"http://{host}:{port}/graphs/{graph_name}"
 
             return {

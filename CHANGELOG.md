@@ -7,7 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.1.0] - 2025-XX-XX
+## [1.0.1] - 2026-01-31
+
+### Fixed
+- Visualization server now automatically finds an available port when the default port is already in use (e.g. multiple Claude Code instances running simultaneously)
+
+## [1.0.0] - 2026-01-30
+
+### Added
+- Dynamic colour scheme for visualization
+- Screenshot support
+
+### Changed
+- Bumped to 1.0.0 stable release
+
+## [0.1.0] - 2026-01-09
 
 ### Added
 - Initial release
@@ -19,5 +33,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fuzzy node matching (exact, normalised, embedding-based)
 - Multi-graph session support
 
-[Unreleased]: https://github.com/utilitydelta/mcp-graph-engine/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/utilitydelta/mcp-graph-engine/compare/v1.0.1...HEAD
+[1.0.1]: https://github.com/utilitydelta/mcp-graph-engine/compare/v1.0.0...v1.0.1
+[1.0.0]: https://github.com/utilitydelta/mcp-graph-engine/compare/v0.1.0...v1.0.0
 [0.1.0]: https://github.com/utilitydelta/mcp-graph-engine/releases/tag/v0.1.0

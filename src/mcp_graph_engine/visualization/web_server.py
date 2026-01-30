@@ -2,6 +2,7 @@
 
 import asyncio
 import logging
+import socket
 import threading
 from pathlib import Path
 
@@ -39,6 +40,8 @@ class VisualizationServer:
         self._filters_lock = asyncio.Lock()
         self._server_thread: threading.Thread | None = None
         self._server: uvicorn.Server | None = None
+        self.host: str | None = None
+        self.port: int | None = None
         self._setup_routes()
 
     def _setup_routes(self) -> None:
@@ -279,19 +282,47 @@ class VisualizationServer:
         except Exception as e:
             logger.error(f"Failed to broadcast filter update for '{graph_name}': {e}")
 
+    @staticmethod
+    def _is_port_available(host: str, port: int) -> bool:
+        """Check if a port is available to bind on the given host."""
+        try:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                s.bind((host, port))
+                return True
+        except OSError:
+            return False
+
     def start(self, host: str = "localhost", port: int = 8765) -> None:
         """Start the server in a background thread.
 
+        If the requested port is already in use (e.g. by another instance),
+        automatically tries subsequent ports until an available one is found.
+
         Args:
             host: Host address to bind to
-            port: Port number to listen on
+            port: Port number to start trying from
         """
         # Check if server is already running
         if self._server_thread is not None and self._server_thread.is_alive():
             logger.warning("Server is already running, ignoring start request")
             return
 
-        config = uvicorn.Config(self.app, host=host, port=port, log_level="warning")
+        # Find an available port, starting from the requested one
+        max_attempts = 20
+        actual_port = port
+        for attempt in range(max_attempts):
+            if self._is_port_available(host, actual_port):
+                break
+            logger.info(f"Port {actual_port} is in use, trying {actual_port + 1}")
+            actual_port += 1
+        else:
+            logger.error(f"Could not find an available port after {max_attempts} attempts (tried {port}-{actual_port})")
+            return
+
+        self.host = host
+        self.port = actual_port
+
+        config = uvicorn.Config(self.app, host=host, port=actual_port, log_level="warning")
         self._server = uvicorn.Server(config)
 
         def run_server():
@@ -299,7 +330,10 @@ class VisualizationServer:
 
         self._server_thread = threading.Thread(target=run_server, daemon=True)
         self._server_thread.start()
-        logger.info(f"Visualization server started at http://{host}:{port}")
+        if actual_port != port:
+            logger.info(f"Visualization server started at http://{host}:{actual_port} (default port {port} was in use)")
+        else:
+            logger.info(f"Visualization server started at http://{host}:{actual_port}")
 
     def stop(self) -> None:
         """Stop the server gracefully.
