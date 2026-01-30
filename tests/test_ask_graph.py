@@ -1,6 +1,7 @@
 """Tests for the ask_graph natural language query tool."""
 
 import pytest
+
 from mcp_graph_engine.graph_engine import GraphEngine
 from mcp_graph_engine.server import parse_ask_query
 

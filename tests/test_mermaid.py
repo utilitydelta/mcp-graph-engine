@@ -1,8 +1,7 @@
 """Tests for create_from_mermaid tool - Mermaid flowchart parsing."""
 
 import pytest
-from src.mcp_graph_engine.graph_engine import GraphEngine
-from src.mcp_graph_engine.session import SessionManager
+
 from src.mcp_graph_engine.server import GraphServer, parse_mermaid
 
 
@@ -323,7 +322,7 @@ graph TD
     async def test_create_from_mermaid_default_relation(self):
         """Test that edges without labels get default relation."""
         server = GraphServer()
-        result = await server._handle_tool("create_from_mermaid", {
+        await server._handle_tool("create_from_mermaid", {
             "mermaid": """
 graph TD
     A --> B

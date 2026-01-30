@@ -7,7 +7,7 @@ instead of remembering specific tool names.
 """
 
 import asyncio
-import json
+
 from mcp_graph_engine.server import GraphServer
 
 

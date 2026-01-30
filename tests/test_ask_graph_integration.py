@@ -1,6 +1,7 @@
 """Integration tests for ask_graph tool with MCP server."""
 
 import pytest
+
 from mcp_graph_engine.server import GraphServer
 
 

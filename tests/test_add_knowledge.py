@@ -1,8 +1,7 @@
 """Tests for add_knowledge tool - the text-based DSL API."""
 
 import pytest
-from src.mcp_graph_engine.graph_engine import GraphEngine
-from src.mcp_graph_engine.session import SessionManager
+
 from src.mcp_graph_engine.server import GraphServer, parse_knowledge_dsl
 
 
@@ -519,11 +518,11 @@ class TestAddKnowledgeEdgeCases:
 
         # Test with try/catch since error handling happens in call_tool
         try:
-            result = await server._handle_tool("add_knowledge", {
+            await server._handle_tool("add_knowledge", {
                 "knowledge": "AuthService depends_on"
             })
             # If no error was raised, the test should fail
-            assert False, "Expected ValueError to be raised"
+            raise AssertionError("Expected ValueError to be raised")
         except ValueError as e:
             assert "Expected 3 parts" in str(e)
 

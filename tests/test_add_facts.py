@@ -1,8 +1,7 @@
 """Tests for add_facts tool - the relationship-first API."""
 
 import pytest
-from src.mcp_graph_engine.graph_engine import GraphEngine
-from src.mcp_graph_engine.session import SessionManager
+
 from src.mcp_graph_engine.server import GraphServer
 
 

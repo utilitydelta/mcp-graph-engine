@@ -1,7 +1,9 @@
 """Integration tests for server import/export handlers."""
 
-import pytest
 import json
+
+import pytest
+
 from src.mcp_graph_engine.server import GraphServer
 
 

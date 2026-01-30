@@ -1,6 +1,7 @@
 """Tests for graph import/export functionality."""
 
 import pytest
+
 from src.mcp_graph_engine.graph_engine import GraphEngine
 
 
@@ -303,7 +304,7 @@ class TestImportMerging:
         csv_content = """source,target,relation
 New1,New2,calls"""
 
-        result = engine.import_graph("csv", csv_content)
+        engine.import_graph("csv", csv_content)
 
         # Should have 4 nodes total (2 existing + 2 new)
         assert engine.graph.number_of_nodes() == 4
@@ -395,7 +396,7 @@ class TestComplexScenarios:
 
             # Import into new graph
             engine2 = GraphEngine()
-            result = engine2.import_graph(format_name, content)
+            engine2.import_graph(format_name, content)
 
             # Verify counts
             assert engine1.graph.number_of_nodes() == engine2.graph.number_of_nodes(), \
@@ -520,9 +521,10 @@ class TestFileBasedImport:
 
     def test_import_from_file_reads_content(self, tmp_path):
         """Test that importing from a file reads the file content."""
-        from src.mcp_graph_engine.server import GraphServer
         import asyncio
         import json
+
+        from src.mcp_graph_engine.server import GraphServer
 
         # Create a test file with graph data
         file_path = tmp_path / "test_import.json"
@@ -557,9 +559,10 @@ class TestFileBasedImport:
 
     def test_import_without_file_path_uses_content(self):
         """Test that import without file_path uses content parameter (existing behavior)."""
-        from src.mcp_graph_engine.server import GraphServer
         import asyncio
         import json
+
+        from src.mcp_graph_engine.server import GraphServer
 
         # Import with content parameter
         server = GraphServer()
@@ -584,8 +587,9 @@ class TestFileBasedImport:
 
     def test_import_with_both_file_path_and_content_raises_error(self):
         """Test that providing both file_path and content raises ValueError."""
-        from src.mcp_graph_engine.server import GraphServer
         import asyncio
+
+        from src.mcp_graph_engine.server import GraphServer
 
         server = GraphServer()
         with pytest.raises(ValueError, match="Provide either file_path or content, not both"):
@@ -597,8 +601,9 @@ class TestFileBasedImport:
 
     def test_import_with_neither_file_path_nor_content_raises_error(self):
         """Test that providing neither file_path nor content raises ValueError."""
-        from src.mcp_graph_engine.server import GraphServer
         import asyncio
+
+        from src.mcp_graph_engine.server import GraphServer
 
         server = GraphServer()
         with pytest.raises(ValueError, match="Must provide either file_path or content"):
@@ -608,8 +613,9 @@ class TestFileBasedImport:
 
     def test_import_from_nonexistent_file_raises_error(self, tmp_path):
         """Test that importing from a nonexistent file raises FileNotFoundError."""
-        from src.mcp_graph_engine.server import GraphServer
         import asyncio
+
+        from src.mcp_graph_engine.server import GraphServer
 
         server = GraphServer()
         nonexistent_path = tmp_path / "does_not_exist.json"
@@ -622,8 +628,9 @@ class TestFileBasedImport:
 
     def test_import_from_directory_raises_error(self, tmp_path):
         """Test that importing from a directory raises ValueError."""
-        from src.mcp_graph_engine.server import GraphServer
         import asyncio
+
+        from src.mcp_graph_engine.server import GraphServer
 
         server = GraphServer()
 
@@ -635,9 +642,10 @@ class TestFileBasedImport:
 
     def test_import_from_file_all_formats(self, tmp_path):
         """Test that import from file works with all supported formats."""
-        from src.mcp_graph_engine.server import GraphServer
         import asyncio
         import json
+
+        from src.mcp_graph_engine.server import GraphServer
 
         # Test JSON format
         json_path = tmp_path / "test.json"
@@ -706,9 +714,10 @@ class TestFileBasedExport:
 
     def test_export_to_file_creates_file_with_correct_content(self, tmp_path):
         """Test that exporting to a file creates the file with correct content."""
-        from src.mcp_graph_engine.server import GraphServer
         import asyncio
         import json
+
+        from src.mcp_graph_engine.server import GraphServer
 
         # Create a graph with some content
         server = GraphServer()
@@ -745,9 +754,10 @@ class TestFileBasedExport:
 
     def test_export_without_file_path_returns_content_inline(self):
         """Test that export without file_path returns content inline (existing behavior)."""
-        from src.mcp_graph_engine.server import GraphServer
         import asyncio
         import json
+
+        from src.mcp_graph_engine.server import GraphServer
 
         # Create a graph with some content
         server = GraphServer()
@@ -775,8 +785,9 @@ class TestFileBasedExport:
 
     def test_export_to_file_creates_parent_directories(self, tmp_path):
         """Test that export to file creates parent directories if needed."""
-        from src.mcp_graph_engine.server import GraphServer
         import asyncio
+
+        from src.mcp_graph_engine.server import GraphServer
 
         # Create a graph
         server = GraphServer()
@@ -802,8 +813,9 @@ class TestFileBasedExport:
 
     def test_export_to_file_all_formats(self, tmp_path):
         """Test that export to file works with all supported formats."""
-        from src.mcp_graph_engine.server import GraphServer
         import asyncio
+
+        from src.mcp_graph_engine.server import GraphServer
 
         formats = ["json", "csv", "dot", "graphml", "mermaid"]
 

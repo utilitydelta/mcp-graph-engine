@@ -1,6 +1,7 @@
 """Core functionality tests covering graph operations, analysis tools, and edge cases."""
 
 import pytest
+
 from src.mcp_graph_engine.graph_engine import GraphEngine
 from src.mcp_graph_engine.session import SessionManager
 
@@ -43,7 +44,7 @@ class TestBasicGraphOperations:
         engine.add_node("C")
         engine.add_edge("A", "B", "connects")
         engine.add_edge("B", "C", "links")
-        
+
         success, edges_removed = engine.remove_node("B")
         assert success is True
         assert edges_removed == 2  # One in, one out
@@ -54,7 +55,7 @@ class TestBasicGraphOperations:
         engine.add_node("A", "class")
         engine.add_node("B", "function")
         engine.add_node("C", "class")
-        
+
         classes = engine.list_nodes(type_filter="class")
         assert len(classes) == 2
         assert all(n["type"] == "class" for n in classes)
@@ -74,7 +75,7 @@ class TestEdgeOperations:
         engine = GraphEngine()
         engine.add_node("AuthService")
         engine.add_node("UserRepo")
-        
+
         # Fuzzy match should find the nodes
         edge_data, created, src, tgt = engine.add_edge("auth service", "user repo", "uses")
         assert src == "AuthService"
@@ -86,7 +87,7 @@ class TestEdgeOperations:
         engine = GraphEngine()
         engine.add_node("A")
         engine.add_node("B")
-        
+
         with pytest.raises(ValueError, match="not found.*Available.*Use find_node"):
             engine.add_edge("A", "NonExistent", "connects")
 
@@ -110,7 +111,7 @@ class TestPathFinding:
         engine.add_node("C")
         engine.add_edge("A", "B", "connects")
         engine.add_edge("B", "C", "connects")
-        
+
         result = engine.shortest_path("A", "C")
         assert result["path"] == ["A", "B", "C"]
         assert result["length"] == 2
@@ -119,7 +120,7 @@ class TestPathFinding:
         """Test shortest path from node to itself."""
         engine = GraphEngine()
         engine.add_node("A")
-        
+
         result = engine.shortest_path("A", "A")
         assert result["path"] == ["A"]
         assert result["length"] == 0
@@ -129,7 +130,7 @@ class TestPathFinding:
         engine = GraphEngine()
         engine.add_node("A")
         engine.add_node("B")
-        
+
         result = engine.shortest_path("A", "B")
         assert result["path"] is None
         assert "disconnected" in result["reason"].lower()
@@ -155,7 +156,7 @@ class TestPathFinding:
         engine.add_edge("A", "C", "path2")
         engine.add_edge("B", "D", "path1")
         engine.add_edge("C", "D", "path2")
-        
+
         result = engine.all_paths("A", "D")
         assert result["count"] == 2
         assert ["A", "B", "D"] in result["paths"]
@@ -192,7 +193,7 @@ class TestAnalysisTools:
         engine.add_nodes([{"label": "A"}, {"label": "B"}, {"label": "C"}, {"label": "D"}])
         engine.add_edge("A", "B", "connects")
         engine.add_edge("C", "D", "connects")
-        
+
         result = engine.connected_components()
         assert result["count"] == 2
         assert ["A", "B"] in result["components"]
@@ -205,7 +206,7 @@ class TestAnalysisTools:
         engine.add_edge("A", "B", "next")
         engine.add_edge("B", "C", "next")
         engine.add_edge("C", "A", "back")  # Creates cycle
-        
+
         result = engine.find_cycles()
         assert result["has_cycles"] is True
         assert len(result["cycles"]) > 0
@@ -216,7 +217,7 @@ class TestAnalysisTools:
         engine.add_nodes([{"label": "Hub"}, {"label": "A"}, {"label": "B"}])
         engine.add_edge("Hub", "A", "connects")
         engine.add_edge("Hub", "B", "connects")
-        
+
         result = engine.degree_centrality(top_n=1)
         assert len(result["rankings"]) == 1
         # Hub should have highest out-degree
@@ -229,7 +230,7 @@ class TestAnalysisTools:
         engine.add_edge("A", "B", "connects")
         engine.add_edge("B", "C", "connects")
         engine.add_edge("C", "D", "connects")
-        
+
         result = engine.subgraph(["A", "B", "C"])
         assert len(result["nodes"]) == 3
         assert len(result["edges"]) == 2  # A->B, B->C
@@ -249,11 +250,11 @@ class TestSessionManager:
         manager = SessionManager()
         graph1 = manager.get_graph("graph1")
         graph2 = manager.get_graph("graph2")
-        
+
         # Add different nodes to each
         graph1.add_node("A")
         graph2.add_node("B")
-        
+
         # Verify isolation
         assert "A" in graph1.graph
         assert "A" not in graph2.graph
@@ -263,7 +264,7 @@ class TestSessionManager:
         manager = SessionManager()
         manager.get_graph("test1")
         manager.get_graph("test2")
-        
+
         graphs = manager.list_graphs()
         assert len(graphs) >= 2
         names = [g["name"] for g in graphs]
@@ -274,10 +275,10 @@ class TestSessionManager:
         """Test graph deletion."""
         manager = SessionManager()
         manager.get_graph("temp")
-        
+
         success = manager.delete_graph("temp")
         assert success is True
-        
+
         # Verify deleted
         graphs = manager.list_graphs()
         names = [g["name"] for g in graphs]
@@ -287,7 +288,7 @@ class TestSessionManager:
         """Test that getting info for nonexistent graph gives helpful error."""
         manager = SessionManager()
         manager.get_graph("existing")
-        
+
         with pytest.raises(ValueError, match="does not exist.*Available"):
             manager.get_graph_info("nonexistent")
 
@@ -309,7 +310,7 @@ class TestErrorMessages:
         engine = GraphEngine()
         engine.add_node("Available1")
         engine.add_node("Available2")
-        
+
         try:
             engine.add_edge("Available1", "Missing", "connects")
         except ValueError as e:
@@ -322,20 +323,20 @@ class TestErrorMessages:
         engine = GraphEngine()
         engine.add_node("A")
         engine.add_node("B")
-        
+
         result = engine.shortest_path("A", "B")
         assert "connected_components" in result.get("reason", "").lower()
 
     def test_import_empty_content_error(self):
         """Test that importing empty content gives clear error."""
         engine = GraphEngine()
-        
+
         with pytest.raises(ValueError, match="content is empty"):
             engine.import_graph("json", "")
 
     def test_import_invalid_format_lists_supported(self):
         """Test that invalid format error lists supported formats."""
         engine = GraphEngine()
-        
+
         with pytest.raises(ValueError, match="Supported formats"):
             engine.import_graph("invalid", "data")

@@ -310,7 +310,7 @@ class VisualizationServer:
         # Find an available port, starting from the requested one
         max_attempts = 20
         actual_port = port
-        for attempt in range(max_attempts):
+        for _attempt in range(max_attempts):
             if self._is_port_available(host, actual_port):
                 break
             logger.info(f"Port {actual_port} is in use, trying {actual_port + 1}")

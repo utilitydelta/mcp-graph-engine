@@ -1,8 +1,7 @@
 """Tests for Cypher query functionality."""
 
-import pytest
-from src.mcp_graph_engine.graph_engine import GraphEngine
 from src.mcp_graph_engine.cypher import execute_cypher_query, preprocess_cypher
+from src.mcp_graph_engine.graph_engine import GraphEngine
 
 
 class TestBasicCypherQueries:

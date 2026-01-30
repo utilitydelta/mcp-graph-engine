@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """Demonstration of query and analysis tools with a realistic example."""
 
-import json
 
 
 def demo_codebase_analysis():

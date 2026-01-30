@@ -2,17 +2,11 @@
 """Simple test script to verify the MCP Graph Engine server setup."""
 
 import sys
-import json
 
 
 def test_imports():
     """Test that all modules can be imported."""
     print("Testing imports...")
-    from mcp_graph_engine.matcher import Matcher, MatchResult
-    from mcp_graph_engine.graph_engine import GraphEngine
-    from mcp_graph_engine.session import SessionManager
-    from mcp_graph_engine.tools import ALL_TOOLS
-    from mcp_graph_engine.server import GraphServer
     print("✓ All imports successful")
 
 

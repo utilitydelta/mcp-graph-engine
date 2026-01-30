@@ -1,6 +1,7 @@
 """Tests for the dump_context tool."""
 
 import pytest
+
 from mcp_graph_engine.graph_engine import GraphEngine
 from mcp_graph_engine.server import GraphServer
 
